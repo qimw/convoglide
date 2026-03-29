@@ -1,140 +1,122 @@
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 # ConvoGlide
 
 **Make long AI chats feel fast again.**
 
-ConvoGlide is an experimental open source project that reduces lag in long AI web conversations.
+ConvoGlide is an experimental open source project for reducing lag in long AI web conversations. The current public alpha focuses on **ChatGPT Web** first, with the architecture intentionally shaped so we can extend it to **Gemini**, **Claude**, and other long-thread chat apps later.
 
-It currently focuses on **ChatGPT Web** first, with a roadmap for **Gemini**, **Claude**, and other long-thread chat apps.
+`Experimental` `ChatGPT-first` `Local-only` `MIT`
 
-## What problem this solves
+## Quick Install
 
-Very long AI conversations often become painful in two different ways:
+- Userscript: [install directly](https://raw.githubusercontent.com/qimw/convoglide/main/userscript/convoglide.user.js) or see [docs/install.md#userscript](docs/install.md#userscript)
+- Browser extension: load [`extension/`](extension) or see [docs/install.md#browser-extension](docs/install.md#browser-extension)
+- Developer setup: see [docs/install.md#developer-setup](docs/install.md#developer-setup)
 
-- **Slow first load**: the page takes too long to open because the conversation payload is huge.
-- **Slow after load**: scrolling, typing, and interaction become janky once too much history stays rendered.
+## What It Fixes
 
-ConvoGlide is being built to attack both problems:
+ConvoGlide targets two different bottlenecks:
 
-- trim oversized conversation payloads before the app hydrates
-- reduce rendering pressure after load
-- keep performance work measurable with repeatable test scripts
+- **Slow first load**
+  - very long ChatGPT conversations can ship a huge conversation payload before the page becomes interactive
+- **Slow after load**
+  - after the thread opens, scrolling, typing, and interaction can degrade as too much history stays rendered
 
-## Who this is for
+## Performance Snapshot
 
-- everyday ChatGPT users with long work or study threads
-- heavy AI users who keep one conversation open for days or weeks
-- people who do not code but still want a smoother experience
-- developers who want to inspect, extend, and benchmark the approach
+Measurements below come from a real very long ChatGPT conversation used as the current benchmark thread.
 
-## Language strategy
+| Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| 0 | Baseline | ~5.0 MB | ~1820 | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |
+| 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
+| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Current recommended default |
+| 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~102 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
 
-ConvoGlide is meant for global users.
+More detail: [docs/benchmarks.md](docs/benchmarks.md)
 
-- **Primary language**: English
-- **Code and comments**: English
-- **Main README**: English first
-- **Localized docs planned**: Simplified Chinese, Japanese, Korean, Spanish, Portuguese, French, and German
+## TODO / Roadmap
 
-English will stay the source of truth, and translated docs will be added in separate files so non-English users can get started quickly.
+- [x] Pre-hydration payload trimming for long ChatGPT conversations
+- [x] Hard rename from prototype naming to ConvoGlide
+- [x] Public runtime API cleanup with `window.ConvoGlide`
+- [x] Userscript alpha install path
+- [x] One-click userscript install URL
+- [x] Chrome / Edge side-load extension path
+- [x] Public benchmark summary for Iteration 0 and Iteration 1
+- [x] First public post-load virtualization benchmark snapshot
+- [ ] Post-load virtualization tuning
+- [ ] Heavy block lazy activation for code blocks, tables, images, and media
+- [ ] Automated regression benchmark lane
+- [ ] Gemini adapter prototype
+- [ ] Claude adapter research
 
-## Fast start
+Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 
-### For non-technical users
+## How It Works
 
-The easiest path will be:
+### Optimization 1: Fix slow first load
 
-1. install a browser add-on or userscript manager
-2. install ConvoGlide in one click
-3. open your long AI conversation
-4. let ConvoGlide reduce lag automatically
+ConvoGlide intercepts oversized ChatGPT conversation payloads before the app hydrates and trims the active branch down to the most recent message nodes. This keeps the first render from paying the full cost of an extremely large conversation tree.
 
-Today, the project is still in the prototype stage. The **userscript** path is the most practical runtime right now, and a simpler packaged browser extension is planned.
+### Optimization 2: Fix slow after load
 
-### For technical users
+ConvoGlide also includes a post-load virtualization MVP. It keeps the most relevant visible turns active and replaces far off-screen turns with lightweight placeholders. This is meant to reduce scroll and input jank after the thread is already open.
 
-Current prototype layout:
+### Next optimization work
 
-- `userscript/`: preferred runtime prototype
-- `extension/`: unpacked extension prototype
-- `scripts/`: Chrome remote-debugging probes and analysis tools
-- `docs/`: measurement notes and findings
+The current virtualization MVP already lowers off-screen DOM cost substantially, but the latest benchmark still shows that heap usage is noisier than DOM reduction because the alpha keeps detached turn snapshots around for fast restore. After the current virtualization pass is tuned, the next step is heavier lazy activation for long code blocks, large tables, and media-heavy turns.
 
-Current recommended prototype entry:
+Architecture detail: [docs/architecture.md](docs/architecture.md)
 
-- `userscript/convoglide.user.js`
+## Project Layout
 
-## Current status
+- `src/runtime/`
+  - source of truth for the shared ChatGPT runtime core
+- `userscript/`
+  - userscript build output for alpha users
+- `extension/`
+  - browser extension alpha files for Chrome / Edge side-load
+- `scripts/`
+  - benchmark, probe, and build helpers
+- `docs/`
+  - install, benchmark, architecture, roadmap, and FAQ docs
 
-ConvoGlide is **experimental**.
+## Docs
 
-What already exists:
+- Install: [docs/install.md](docs/install.md)
+- Benchmarks: [docs/benchmarks.md](docs/benchmarks.md)
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- Roadmap: [docs/roadmap.md](docs/roadmap.md)
+- FAQ: [docs/faq.md](docs/faq.md)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security: [SECURITY.md](SECURITY.md)
 
-- a userscript prototype for trimming oversized ChatGPT conversation payloads
-- an extension prototype for early page hooks
-- CDP-based scripts for measuring load behavior on real logged-in browser sessions
-- findings from a real very long ChatGPT conversation
+## FAQ
 
-What is not finished yet:
+Quick answers:
 
-- a polished one-click installation flow
-- extension store packaging
-- multi-site adapters beyond ChatGPT
-- stable naming and UI cleanup across the codebase
+- Does ConvoGlide upload my conversations?
+  - No. The current alpha runs locally in the browser and does not send your chat content anywhere.
+- Does it delete data from ChatGPT?
+  - No. The current optimization changes browser-side rendering behavior and response handling, not your server-side conversation history.
+- Is it production-ready?
+  - Not yet. It is an experimental alpha focused on proving measurable performance gains.
 
-## Development plan
+Full FAQ: [docs/faq.md](docs/faq.md)
 
-### Phase 1: Project cleanup and public alpha
+## News / Updates
 
-Estimated time: **1 to 2 days**
-
-- rename project surfaces from the prototype name to ConvoGlide
-- clean up README, package metadata, and repository structure
-- make the userscript easier to install
-- keep a simple benchmark workflow for reproducible testing
-
-### Phase 2: Easier installation for non-coders
-
-Estimated time: **2 to 4 days**
-
-- package a browser extension for Chrome and Edge
-- improve the install flow for Tampermonkey and Violentmonkey
-- add a basic settings surface for common users
-- write short beginner-friendly setup docs
-
-### Phase 3: Better runtime optimization
-
-Estimated time: **3 to 5 days**
-
-- keep reducing first-load cost on huge conversations
-- add stronger post-load virtualization and rendering reduction
-- optimize heavy blocks such as large code snippets, tables, and rich content
-- benchmark before and after changes on long real-world threads
-
-### Phase 4: Multi-model support
-
-Estimated time: **3 to 6 days**
-
-- adapt the architecture for Gemini Web
-- evaluate Claude Web and other chat UIs
-- define a shared core with site-specific adapters
-
-### Phase 5: Localization and distribution
-
-Estimated time: **ongoing**
-
-- publish multilingual docs
-- improve onboarding for non-English users
-- prepare browser store releases
-- build a contribution guide for community translators and adapter authors
-
-## Repository notes
-
-This repository currently contains an early performance prototype imported from local experiments. The implementation will continue to evolve as we clean up naming, stabilize the runtime, and expand support beyond ChatGPT.
+- `2026-03-29`: Renamed the runtime, scripts, and public API from the prototype name to `ConvoGlide`
+- `2026-03-29`: Published the first public benchmark snapshot for the real long-thread baseline and payload-trim iterations
+- `2026-03-29`: Added the first post-load virtualization MVP to the shared ChatGPT runtime core
+- `2026-03-29`: Added one-click userscript install and published the first public virtualization benchmark snapshot
 
 ## License
 
-MIT
+[MIT](LICENSE)
 
-## Experiment note
+## Experiment Note
 
 ConvoGlide is a pure **vibecoding** experimental project built with **Codex in the ChatGPT Plus plan**.

@@ -3,6 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "description": "Experimental long-chat performance optimizer for AI web apps.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qimw/convoglide.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qimw/convoglide/issues"
+  },
+  "homepage": "https://github.com/qimw/convoglide#readme",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-runtime.mjs",
