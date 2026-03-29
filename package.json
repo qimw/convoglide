@@ -1,8 +1,8 @@
 {
-  "name": "milkgpt",
+  "name": "convoglide",
   "private": true,
   "version": "0.1.0",
-  "description": "Local ChatGPT performance optimizer experiments.",
+  "description": "Experimental long-chat performance optimizer for AI web apps.",
   "type": "module",
   "scripts": {
     "analyze:body": "node scripts/analyze-conversation-body.mjs",
