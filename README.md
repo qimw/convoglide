@@ -2,6 +2,8 @@
 
 # ConvoGlide
 
+[![CI](https://github.com/qimw/convoglide/actions/workflows/ci.yml/badge.svg)](https://github.com/qimw/convoglide/actions/workflows/ci.yml)
+
 **Make long AI chats feel fast again.**
 
 ConvoGlide is an experimental open source project for reducing lag in long AI web conversations. The current public alpha focuses on **ChatGPT Web** first, with the architecture intentionally shaped so we can extend it to **Gemini**, **Claude**, and other long-thread chat apps later.
@@ -125,6 +127,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added a local benchmark lane and alpha asset packaging workflow for maintainers
 - `2026-03-29`: Added heavy block lazy activation for large off-screen code blocks and tables
 - `2026-03-29`: Added benchmark history capture and a report comparison tool for iteration-to-iteration reviews
+- `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
 
 ## License
 

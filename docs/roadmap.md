@@ -25,6 +25,7 @@
 - [x] Side-load extension path for Chrome / Edge
 - [x] Simpler one-click userscript distribution
 - [x] Packaged extension zip build script
+- [x] Tagged GitHub release asset workflow
 - [ ] Packaged extension zip in releases
 - [ ] Browser store readiness review
 

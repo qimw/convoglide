@@ -16,6 +16,7 @@
 - Local automated benchmark lane for real long-thread regression runs
 - Benchmark history capture and report comparison tooling
 - Alpha asset packaging for `dist/convoglide.user.js` and `dist/convoglide-extension.zip`
+- Tagged GitHub release asset workflow
 
 ### Changed
 
