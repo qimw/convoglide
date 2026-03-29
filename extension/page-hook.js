@@ -482,7 +482,6 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     getEvents() {
       return Array.isArray(window.__CONVOGLIDE_EVENTS) ? [...window.__CONVOGLIDE_EVENTS] : [];
     },
-    getMaxMessageNodes,
     setMaxMessageNodes(value) {
       const nextValue = Math.max(20, Math.floor(Number(value) || DEFAULT_MAX_MESSAGE_NODES));
       localStorage.setItem(maxMessageNodesStorageKey, String(nextValue));
