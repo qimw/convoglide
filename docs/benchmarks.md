@@ -80,14 +80,14 @@ The tradeoff is similar to Iteration 2:
 
 ## Latest rerun check
 
-A follow-up rerun on `2026-03-29` after the restore-interaction changes kept the same steady-state shape as the earlier public alpha sample:
+A follow-up rerun on `2026-03-29` after the restore-interaction and runtime-tuning changes kept the same steady-state shape as the earlier public alpha sample while improving the latest rerun slightly:
 
-- steady DOM remained at `3473`
+- steady DOM moved from `3473` to `3471`
 - max virtualized turns remained at `33`
 - heavy placeholders remained at `13`
-- steady heap moved from about `101 MB` to about `103 MB`
+- steady heap moved from about `103 MB` to about `98 MB`
 
-That rerun suggests the restore UX work did not regress steady DOM behavior on the current benchmark thread, even though heap still has the same restore-snapshot tradeoff.
+That rerun suggests the restore UX work and the latest runtime tuning did not regress steady DOM behavior on the current benchmark thread, while still leaving the same restore-snapshot tradeoff in place.
 
 ## Measurement method
 

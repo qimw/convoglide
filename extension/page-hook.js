@@ -139,6 +139,10 @@ function convoglideClassifyHeavyBlockMetrics(metrics, options = {}) {
   return false;
 }
 
+function convoglideIsDocumentHidden(doc = document) {
+  return doc?.visibilityState === "hidden";
+}
+
 function installConvoGlideChatGPTRuntime(options = {}) {
   const ROOT_ID = CONVOGLIDE_ROOT_ID;
   const CONVERSATION_RESPONSE_RE = CONVOGLIDE_CONVERSATION_RESPONSE_RE;
@@ -418,6 +422,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         return;
       }
 
+      if (convoglideIsDocumentHidden()) {
+        return;
+      }
+
       if (Date.now() < pauseUntil) {
         restoreAllTurns(threadRoot);
         summarize(getTurnElements(threadRoot), 0);
@@ -560,6 +568,11 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("load", schedule, { once: true });
+    document.addEventListener("visibilitychange", () => {
+      if (!convoglideIsDocumentHidden()) {
+        schedule();
+      }
+    });
 
     document.addEventListener("keydown", (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
@@ -593,6 +606,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     let restoreBoundRoot = null;
     let pauseUntil = 0;
     let lastSummary = "";
+    const heavyClassificationCache = new WeakMap();
 
     function findThreadRoot() {
       for (const selector of threadSelectors) {
@@ -625,8 +639,12 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     }
 
     function isHeavyBlock(element) {
+      const cached = heavyClassificationCache.get(element);
+      if (typeof cached === "boolean") {
+        return cached;
+      }
       const rect = element.getBoundingClientRect();
-      return convoglideClassifyHeavyBlockMetrics(
+      const result = convoglideClassifyHeavyBlockMetrics(
         {
           tagName: element.tagName,
           height: Math.max(Math.ceil(rect.height || 0), Math.ceil(element.offsetHeight || 0)),
@@ -635,6 +653,8 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         },
         heavyBlocks,
       );
+      heavyClassificationCache.set(element, result);
+      return result;
     }
 
     function applyMediaHints(root) {
@@ -643,17 +663,23 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       }
 
       for (const image of root.querySelectorAll("img")) {
+        if (image.dataset.convoglideHinted === "true") continue;
         if (!image.hasAttribute("loading")) image.setAttribute("loading", "lazy");
         if (!image.hasAttribute("decoding")) image.setAttribute("decoding", "async");
         if (!image.hasAttribute("fetchpriority")) image.setAttribute("fetchpriority", "low");
+        image.dataset.convoglideHinted = "true";
       }
 
       for (const iframe of root.querySelectorAll("iframe")) {
+        if (iframe.dataset.convoglideHinted === "true") continue;
         if (!iframe.hasAttribute("loading")) iframe.setAttribute("loading", "lazy");
+        iframe.dataset.convoglideHinted = "true";
       }
 
       for (const video of root.querySelectorAll("video")) {
+        if (video.dataset.convoglideHinted === "true") continue;
         if (!video.hasAttribute("preload")) video.setAttribute("preload", "metadata");
+        video.dataset.convoglideHinted = "true";
       }
     }
 
@@ -733,6 +759,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         return;
       }
 
+      if (convoglideIsDocumentHidden()) {
+        return;
+      }
+
       applyMediaHints(threadRoot);
       cleanupDetachedPlaceholders();
 
@@ -758,10 +788,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         if (block.closest('[data-convoglide-virtualized="true"]')) {
           continue;
         }
-        if (!isHeavyBlock(block)) {
+        if (isNearViewport(block)) {
           continue;
         }
-        if (isNearViewport(block)) {
+        if (!isHeavyBlock(block)) {
           continue;
         }
         if (deferBlock(block)) {
@@ -873,6 +903,11 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("load", schedule, { once: true });
+    document.addEventListener("visibilitychange", () => {
+      if (!convoglideIsDocumentHidden()) {
+        schedule();
+      }
+    });
 
     document.addEventListener("keydown", (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {

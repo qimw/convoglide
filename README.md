@@ -104,6 +104,7 @@ Architecture detail: [docs/architecture.md](docs/architecture.md)
 
 - Install: [docs/install.md](docs/install.md)
 - Benchmarks: [docs/benchmarks.md](docs/benchmarks.md)
+- Benchmark workflow: [docs/benchmark-workflow.md](docs/benchmark-workflow.md)
 - Architecture: [docs/architecture.md](docs/architecture.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
 - FAQ: [docs/faq.md](docs/faq.md)
@@ -139,6 +140,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added benchmark history capture and a report comparison tool for iteration-to-iteration reviews
 - `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
 - `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
+- `2026-03-29`: Tuned post-load runtime scanning and hardened the benchmark lane so empty captures retry instead of being saved as false-success reports
 
 ## License
 

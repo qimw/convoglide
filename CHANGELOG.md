@@ -26,3 +26,5 @@
 - Added heavy block lazy activation for large off-screen code blocks and tables
 - Added click and keyboard restore for virtualized turns and deferred heavy blocks
 - Added release, store readiness, and docs validation support for the public alpha
+- Added a benchmark workflow guide and stricter benchmark-lane retry/validation behavior
+- Tuned post-load runtime scanning to skip hidden-document work and cache heavy-block classification

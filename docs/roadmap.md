@@ -37,6 +37,7 @@
 - [x] Chinese README
 - [x] Install docs
 - [x] Benchmarks docs
+- [x] Benchmark workflow docs
 - [x] Architecture docs
 - [x] FAQ docs
 - [x] Public runtime flow diagram

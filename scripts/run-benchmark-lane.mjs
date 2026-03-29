@@ -90,6 +90,35 @@ async function runJsonScriptWithRetry(scriptPath, args = [], attempts = 5) {
   throw lastError || new Error(`Failed to run ${scriptPath}`);
 }
 
+function isUsableFirstLoadResult(firstLoad) {
+  if (!firstLoad?.ok) {
+    return false;
+  }
+  const samples = Array.isArray(firstLoad.samples) ? firstLoad.samples : [];
+  return samples.some((sample) => sample?.ok);
+}
+
+async function runFirstLoadProbeWithRetry(args, attempts = 3) {
+  let lastResult = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const result = await runJsonScriptWithRetry(
+      resolve(repoRoot, "scripts/probe-userscript-first-load.mjs"),
+      args,
+      2,
+    );
+    lastResult = result;
+    if (isUsableFirstLoadResult(result)) {
+      return result;
+    }
+    if (attempt < attempts) {
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 1500));
+    }
+  }
+
+  throw new Error(lastResult?.error || "Benchmark lane did not capture any usable first-load samples.");
+}
+
 function summarize(firstLoad, injection, url, keep) {
   const samples = Array.isArray(firstLoad.samples) ? firstLoad.samples : [];
   const okSamples = samples.filter((sample) => sample.ok);
@@ -176,11 +205,14 @@ if (!debuggerReady) {
 const injection = await runJsonScriptWithRetry(resolve(repoRoot, "scripts/probe-userscript-injection.mjs"), [
   "https://chatgpt.com/",
 ]);
-const firstLoad = await runJsonScriptWithRetry(resolve(repoRoot, "scripts/probe-userscript-first-load.mjs"), [
+const firstLoad = await runFirstLoadProbeWithRetry([
   args.url,
   String(args.keep),
 ]);
 const report = summarize(firstLoad, injection, args.url, args.keep);
+if (!report.summary.stableSample) {
+  throw new Error("Benchmark lane did not produce a stable sample.");
+}
 const markdown = renderMarkdown(report);
 
 mkdirSync(args.outDir, { recursive: true });

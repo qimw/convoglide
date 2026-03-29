@@ -10,6 +10,7 @@ const requiredFiles = [
   "README.zh-CN.md",
   "docs/install.md",
   "docs/benchmarks.md",
+  "docs/benchmark-workflow.md",
   "docs/architecture.md",
   "docs/roadmap.md",
   "docs/faq.md",

@@ -100,6 +100,7 @@ ConvoGlide 现在还会对仍处于活跃 turn 中、但离视口较远的大型
 
 - 安装： [docs/install.md](docs/install.md)
 - Benchmark： [docs/benchmarks.md](docs/benchmarks.md)
+- Benchmark 工作流： [docs/benchmark-workflow.md](docs/benchmark-workflow.md)
 - 架构： [docs/architecture.md](docs/architecture.md)
 - 路线图： [docs/roadmap.md](docs/roadmap.md)
 - FAQ： [docs/faq.md](docs/faq.md)
