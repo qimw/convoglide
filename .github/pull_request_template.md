@@ -6,6 +6,7 @@
 ## Validation
 
 - [ ] `npm run build`
+- [ ] `npm test`
 - [ ] relevant `node --check ...` commands
 - [ ] benchmark updated if performance behavior changed
 - [ ] README / docs updated if install, API, or roadmap changed

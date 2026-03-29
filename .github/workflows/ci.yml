@@ -39,6 +39,9 @@ jobs:
           node --check scripts/probe-userscript-injection.mjs
           node --check scripts/probe-userscript-first-load.mjs
 
+      - name: Run tests
+        run: npm test
+
       - name: Package alpha assets
         run: npm run package:alpha
 
