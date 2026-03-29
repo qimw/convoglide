@@ -5,7 +5,7 @@ const conversationId =
 const navigateUrl =
   process.argv[3] ||
   `https://chatgpt.com/g/g-p-68f4c49db7808191aa939c964a7e19f8-sheng-huo/c/${conversationId}`;
-const caps = [160, 120, 80, 40];
+const caps = [160, 120, 80, 40, 20];
 const ROOT_ID = "client-created-root";
 
 function cloneValue(value) {

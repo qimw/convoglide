@@ -31,11 +31,17 @@ ConvoGlide targets two different bottlenecks:
 
 Measurements below come from a real very long ChatGPT conversation used as the current benchmark thread.
 
+Plain-language check on that same thread:
+
+- Raw ChatGPT first showed the real conversation title at about `12,422 ms`, then the page started timing out under probing by about `18,452 ms`
+- In a clean rerun with ConvoGlide `keep 20`, the main conversation response arrived at about `10,746 ms` and the real title appeared at about `14,003 ms`
+- That means the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`, and the optimized page stayed probeable through `50,000 ms`
+
 | Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 0 | Baseline | ~5.0 MB | ~1820 | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
-| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Current recommended default |
+| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Recommended stress profile for post-load benchmarking |
 | 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
 | 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~100 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
 
@@ -70,6 +76,8 @@ Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 ### Optimization 1: Fix slow first load
 
 ConvoGlide intercepts oversized ChatGPT conversation payloads before the app hydrates and trims the active branch down to the most recent message nodes. This keeps the first render from paying the full cost of an extremely large conversation tree.
+
+The current public default is `keep 20`, because that profile has been the best fit so far for getting long threads on-screen faster for normal users. Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
 
 ### Optimization 2: Fix slow after load
 
@@ -141,6 +149,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
 - `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
 - `2026-03-29`: Tuned post-load runtime scanning and hardened the benchmark lane so empty captures retry instead of being saved as false-success reports
+- `2026-03-30`: Switched the public default keep limit to `20` after the latest clean rerun showed a shorter post-response render gap and a much more stable long-thread page through `50 s`
 
 ## License
 

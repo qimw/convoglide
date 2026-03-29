@@ -21,8 +21,11 @@ npm run verify:package
 3. If you touched runtime behavior, generate or compare a fresh benchmark report:
 
 ```bash
+npm run benchmark:lane -- "<chat-url>" --keep 20
 npm run benchmark:lane -- "<chat-url>" --keep 80
 ```
+
+Use the `20` run for the public default path and the `80` run when the release claim depends on post-load virtualization behavior.
 
 4. Review:
 

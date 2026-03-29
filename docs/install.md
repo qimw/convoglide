@@ -33,11 +33,19 @@ Recommended for most non-technical users.
 
 ### Tuning
 
-The default active-branch limit is `80` message nodes.
+The default active-branch limit is `20` message nodes.
+
+That default is intentionally biased toward faster first-open behavior on very long threads.
+
+If you want to keep more recent history visible, try:
+
+- `80` for the current post-load stress profile
+- `120` when you want even more recent history visible and are willing to trade away speed
 
 From the page console:
 
 ```js
+window.ConvoGlide.setMaxMessageNodes(80)
 window.ConvoGlide.setMaxMessageNodes(120)
 window.ConvoGlide.clearMaxMessageNodes()
 ```
@@ -105,7 +113,7 @@ node scripts/probe-userscript-injection.mjs https://chatgpt.com/
 ### Probe first-load behavior on a long thread
 
 ```bash
-node scripts/probe-userscript-first-load.mjs "<chat-url>" 80
+node scripts/probe-userscript-first-load.mjs "<chat-url>" 20
 ```
 
 ### Run the local benchmark lane
@@ -114,7 +122,11 @@ This is the easiest repeatable way to generate a fresh benchmark report for a re
 
 Before using it, log into ChatGPT once in the dedicated Chrome profile created by `./scripts/launch-test-chrome.sh`.
 
+For the fastest user-facing default check, use `20`.
+For the heavier post-load virtualization stress profile used in the public Iteration 2 and 3 tables, use `80`.
+
 ```bash
+npm run benchmark:lane -- "<chat-url>" --keep 20
 npm run benchmark:lane -- "<chat-url>" --keep 80
 ```
 

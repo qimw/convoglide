@@ -28,7 +28,15 @@ npm run build
 
 ## Run the lane
 
-Use the current benchmark thread and keep limit:
+Use the current benchmark thread and keep limit.
+
+For the normal user-facing default check:
+
+```bash
+npm run benchmark:lane -- "<chat-url>" --keep 20
+```
+
+For the heavier stress profile used to exercise post-load virtualization more clearly:
 
 ```bash
 npm run benchmark:lane -- "<chat-url>" --keep 80

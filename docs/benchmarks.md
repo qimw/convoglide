@@ -16,13 +16,30 @@ Important observed facts from that thread:
 
 ## Iteration table
 
+The table below keeps using `80` for Iteration 2 and 3 because that heavier profile still exercises post-load virtualization more clearly than the new fast default.
+
 | Iteration | Strategy | Payload | Mapping nodes | Virtualized turns | Steady DOM | Heap | Probeability | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | 0 | Baseline | ~5.0 MB | ~1820 | 0 | hard to keep stable | n/a | degrades | Real long thread becomes heavy once the conversation view fully arrives |
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | stable through 50s | Trim-only path |
-| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current recommended default |
+| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current stress profile for post-load benchmarking |
 | 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
 | 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~100 MB | stable through 50s | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
+
+## User-facing load check
+
+On the same benchmark thread:
+
+- plain ChatGPT first showed the real thread title at about `12,422 ms`
+- that plain page started timing out under probing by about `18,452 ms`
+- in a clean rerun, ConvoGlide with the fast default (`keep 20`) received the main conversation response at about `10,746 ms` and showed the real thread title at about `14,003 ms`
+- that optimized page stayed probeable through `50,000 ms`
+
+In plain language:
+
+- wall-clock first-visible time still moves around with network timing
+- the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`
+- the optimized page stayed usable instead of quickly becoming a heavy, unstable page
 
 ## Latest Iteration 2 sample timeline
 

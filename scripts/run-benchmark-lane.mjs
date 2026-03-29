@@ -10,7 +10,7 @@ const repoRoot = resolve(__dirname, "..");
 function parseArgs(argv) {
   const args = {
     url: "",
-    keep: 80,
+    keep: 20,
     outDir: resolve(repoRoot, "artifacts/benchmarks"),
     launch: true,
   };
@@ -23,7 +23,7 @@ function parseArgs(argv) {
       continue;
     }
     if (arg === "--keep") {
-      args.keep = Math.max(20, Number(argv[index + 1]) || 80);
+      args.keep = Math.max(20, Number(argv[index + 1]) || 20);
       index += 1;
       continue;
     }
@@ -38,7 +38,7 @@ function parseArgs(argv) {
   }
 
   if (!args.url) {
-    console.error("Usage: node scripts/run-benchmark-lane.mjs <chat-url> [--keep 80] [--out-dir artifacts/benchmarks] [--no-launch]");
+    console.error("Usage: node scripts/run-benchmark-lane.mjs <chat-url> [--keep 20] [--out-dir artifacts/benchmarks] [--no-launch]");
     process.exit(1);
   }
 

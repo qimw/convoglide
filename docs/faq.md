@@ -29,6 +29,13 @@ No. The current alpha supports side-loading only. Store packaging is a later mil
 
 The active-branch trimming limit applies to intercepted conversation payloads. Reloading makes sure the new limit is used for the next conversation fetch.
 
+## Why is the default keep limit `20` if some benchmark tables still use `80`?
+
+Because they serve different purposes:
+
+- `20` is the current public default for getting very long threads on-screen faster
+- `80` is still the better stress profile for showing how post-load virtualization behaves when more recent history stays visible
+
 ## Why can search briefly pause virtualization?
 
 The post-load virtualization MVP pauses around browser find-in-page so off-screen content can be restored while searching.
