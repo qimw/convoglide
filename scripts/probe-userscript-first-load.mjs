@@ -42,6 +42,7 @@ async function sample(label) {
           eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
           domNodes: document.getElementsByTagName('*').length,
           virtualizedTurns: document.querySelectorAll('[data-convoglide-virtualized="true"]').length,
+          heavyPlaceholders: document.querySelectorAll('[data-convoglide-heavy-placeholder="true"]').length,
           heapMB: performance.memory?.usedJSHeapSize ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
         }))()`,
         returnByValue: true,

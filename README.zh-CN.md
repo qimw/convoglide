@@ -33,6 +33,7 @@ ConvoGlide 主要针对两类性能问题：
 | 1A | 保留最近 `120` 条消息 | ~0.38 MB | 121 | ~11.8k | ~112 MB | 50 秒内仍可稳定探测 |
 | 1B | 保留最近 `80` 条消息 | ~0.30 MB | 81 | ~9.1k | ~99 MB | 当前默认推荐值 |
 | 2 | `80` 档 + 加载后虚拟化 MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | 已虚拟化 `33/45` 个 turn，DOM 相比 1B 再降约 58% |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~97 MB | 额外延迟了 `13` 个重块，DOM 相比 2 再降约 9% |
 
 详细结果见 [docs/benchmarks.md](docs/benchmarks.md)
 
@@ -48,8 +49,9 @@ ConvoGlide 主要针对两类性能问题：
 - [x] 首版加载后虚拟化 benchmark 摘要
 - [x] 本地自动化 benchmark lane
 - [x] extension zip 打包脚本
+- [x] 面向大代码块和表格的 heavy block lazy activation MVP
 - [ ] 加载后虚拟化调优
-- [ ] 长代码块、表格、图片、媒体的更强懒激活
+- [ ] 图片、媒体和内存恢复路径的进一步调优
 - [ ] Gemini 适配原型
 - [ ] Claude 调研
 
@@ -65,7 +67,11 @@ ConvoGlide 会在 ChatGPT 前端 hydration 之前，拦截超长 conversation pa
 
 ConvoGlide 还包含一个加载后虚拟化 MVP。它会尽量保持视口附近消息处于活跃渲染状态，把远离视口的内容替换成轻量占位，从而降低滚动和输入阶段的负担。
 
-当前这版已经能明显降低离屏 DOM 成本，但堆内存改善还没有 DOM 那么漂亮，因为 alpha 方案会保留已脱离 DOM 的 turn 快照用于快速恢复。后续会继续围绕这一点做调优。
+### Optimization 3：延迟激活重块
+
+ConvoGlide 现在还会对仍处于活跃 turn 中、但离视口较远的大型 `pre` 和 `table` 做更细粒度的延迟激活，并给图片/视频等媒体补懒加载提示。
+
+当前这版已经能明显降低离屏 DOM 成本，但堆内存改善还没有 DOM 那么漂亮，因为 alpha 方案会保留已脱离 DOM 的 turn 和 heavy block 快照用于快速恢复。后续会继续围绕这一点做调优。
 
 架构说明见 [docs/architecture.md](docs/architecture.md)
 

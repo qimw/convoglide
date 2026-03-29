@@ -33,6 +33,7 @@ Measurements below come from a real very long ChatGPT conversation used as the c
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Current recommended default |
 | 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~97 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
 
 More detail: [docs/benchmarks.md](docs/benchmarks.md)
 
@@ -48,8 +49,9 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 - [x] First public post-load virtualization benchmark snapshot
 - [x] Local automated benchmark lane
 - [x] Packaged extension zip build script
+- [x] Heavy block lazy activation MVP for large code blocks and tables
 - [ ] Post-load virtualization tuning
-- [ ] Heavy block lazy activation for code blocks, tables, images, and media
+- [ ] Wider lazy activation tuning for images, media, and memory behavior
 - [ ] Gemini adapter prototype
 - [ ] Claude adapter research
 
@@ -65,9 +67,13 @@ ConvoGlide intercepts oversized ChatGPT conversation payloads before the app hyd
 
 ConvoGlide also includes a post-load virtualization MVP. It keeps the most relevant visible turns active and replaces far off-screen turns with lightweight placeholders. This is meant to reduce scroll and input jank after the thread is already open.
 
+### Optimization 3: Defer heavy blocks after load
+
+ConvoGlide now also defers large off-screen `pre` and `table` blocks inside still-active turns, and it applies lazy-loading hints to media. This trims another layer of rendering pressure after turn-level virtualization has already done its work.
+
 ### Next optimization work
 
-The current virtualization MVP already lowers off-screen DOM cost substantially, but the latest benchmark still shows that heap usage is noisier than DOM reduction because the alpha keeps detached turn snapshots around for fast restore. After the current virtualization pass is tuned, the next step is heavier lazy activation for long code blocks, large tables, and media-heavy turns.
+The latest benchmark shows that heavy block deferral lowers steady DOM again, but heap behavior is still noisier than DOM reduction because the alpha keeps detached snapshots around for fast restore. The next step is tuning those restore paths and broadening media-specific optimizations.
 
 Architecture detail: [docs/architecture.md](docs/architecture.md)
 
@@ -116,6 +122,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added one-click userscript install and published the first public virtualization benchmark snapshot
 - `2026-03-29`: Added a basic CI workflow to validate generated artifacts, syntax, and naming cleanliness
 - `2026-03-29`: Added a local benchmark lane and alpha asset packaging workflow for maintainers
+- `2026-03-29`: Added heavy block lazy activation for large off-screen code blocks and tables
 
 ## License
 

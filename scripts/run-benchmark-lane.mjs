@@ -78,8 +78,10 @@ function summarize(firstLoad, injection, url, keep) {
   const okSamples = samples.filter((sample) => sample.ok);
   const stableSample = okSamples.at(-1) || null;
   const firstResolvedTitleSample = okSamples.find((sample) => sample.title && sample.title !== "ChatGPT") || null;
-  const firstVirtualizerSample = okSamples.find((sample) => sample.phase === "virtualizer") || null;
+  const firstVirtualizerSample =
+    okSamples.find((sample) => (sample.virtualizedTurns || 0) > 0 || sample.phase === "virtualizer") || null;
   const maxVirtualizedTurns = okSamples.reduce((best, sample) => Math.max(best, sample.virtualizedTurns || 0), 0);
+  const maxHeavyPlaceholders = okSamples.reduce((best, sample) => Math.max(best, sample.heavyPlaceholders || 0), 0);
 
   return {
     createdAt: new Date().toISOString(),
@@ -92,6 +94,7 @@ function summarize(firstLoad, injection, url, keep) {
       firstResolvedTitleSample,
       firstVirtualizerSample,
       maxVirtualizedTurns,
+      maxHeavyPlaceholders,
       networkEventCount: Array.isArray(firstLoad.networkEvents) ? firstLoad.networkEvents.length : 0,
     },
   };
@@ -114,17 +117,18 @@ function renderMarkdown(report) {
     "",
     `- First virtualizer sample: ${firstVirtualizer ? `\`${firstVirtualizer.label}\`` : "`n/a`"}`,
     `- Max virtualized turns: \`${report.summary.maxVirtualizedTurns}\``,
+    `- Max heavy placeholders: \`${report.summary.maxHeavyPlaceholders}\``,
     `- Stable DOM: \`${stable?.domNodes ?? "n/a"}\``,
     `- Stable heap: \`${stable?.heapMB ?? "n/a"} MB\``,
     `- Stable phase: \`${stable?.phase ?? "n/a"}\``,
     "",
-    "## Samples",
-    "",
-    "| Sample | Phase | DOM | Virtualized turns | Heap | Title |",
-    "| --- | --- | ---: | ---: | ---: | --- |",
+      "## Samples",
+      "",
+      "| Sample | Phase | DOM | Virtualized turns | Heavy placeholders | Heap | Title |",
+      "| --- | --- | ---: | ---: | ---: | ---: | --- |",
     ...((report.firstLoad.samples || []).map((sample) => {
       const title = String(sample.title || "").replace(/\|/g, "\\|");
-      return `| ${sample.label} | ${sample.phase || "n/a"} | ${sample.domNodes ?? "n/a"} | ${sample.virtualizedTurns ?? "n/a"} | ${sample.heapMB ?? "n/a"} | ${title || "n/a"} |`;
+      return `| ${sample.label} | ${sample.phase || "n/a"} | ${sample.domNodes ?? "n/a"} | ${sample.virtualizedTurns ?? "n/a"} | ${sample.heavyPlaceholders ?? "n/a"} | ${sample.heapMB ?? "n/a"} | ${title || "n/a"} |`;
     })),
     "",
   ].join("\n");

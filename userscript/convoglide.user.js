@@ -17,6 +17,9 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const DEFAULT_KEEP_TAIL_TURNS = 12;
   const DEFAULT_VIEWPORT_BUFFER_PX = 1800;
   const DEFAULT_MIN_TURN_HEIGHT_PX = 160;
+  const DEFAULT_HEAVY_BLOCK_BUFFER_PX = 1200;
+  const DEFAULT_HEAVY_BLOCK_MIN_HEIGHT_PX = 260;
+  const DEFAULT_HEAVY_BLOCK_MIN_TEXT_LENGTH = 1400;
   const threadSelectors = ["#thread", "main"];
 
   const responseHeaderName = options.responseHeaderName || "x-convoglide";
@@ -33,6 +36,18 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     minTurnHeightPx: Number.isFinite(options.virtualization?.minTurnHeightPx)
       ? Math.max(80, Math.floor(options.virtualization.minTurnHeightPx))
       : DEFAULT_MIN_TURN_HEIGHT_PX,
+  };
+  const heavyBlocks = {
+    enabled: options.heavyBlocks?.enabled !== false,
+    viewportBufferPx: Number.isFinite(options.heavyBlocks?.viewportBufferPx)
+      ? Math.max(400, Math.floor(options.heavyBlocks.viewportBufferPx))
+      : DEFAULT_HEAVY_BLOCK_BUFFER_PX,
+    minHeightPx: Number.isFinite(options.heavyBlocks?.minHeightPx)
+      ? Math.max(160, Math.floor(options.heavyBlocks.minHeightPx))
+      : DEFAULT_HEAVY_BLOCK_MIN_HEIGHT_PX,
+    minTextLength: Number.isFinite(options.heavyBlocks?.minTextLength)
+      ? Math.max(400, Math.floor(options.heavyBlocks.minTextLength))
+      : DEFAULT_HEAVY_BLOCK_MIN_TEXT_LENGTH,
   };
 
   function notify(detail = {}) {
@@ -486,8 +501,282 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     createTurnVirtualizer();
   }
 
+  function createHeavyBlockLazyActivator() {
+    const deferredBlocks = new Map();
+    let scheduled = false;
+    let threadRoot = null;
+    let threadObserver = null;
+    let discoveryObserver = null;
+    let pauseUntil = 0;
+    let lastSummary = "";
+
+    function findThreadRoot() {
+      for (const selector of threadSelectors) {
+        const node = document.querySelector(selector);
+        if (node) {
+          return node;
+        }
+      }
+      return null;
+    }
+
+    function getHeavyBlocks(root) {
+      if (!root) {
+        return [];
+      }
+      return Array.from(root.querySelectorAll("pre, table"));
+    }
+
+    function getHeavyPlaceholders(root) {
+      if (!root) {
+        return [];
+      }
+      return Array.from(root.querySelectorAll('[data-convoglide-heavy-placeholder="true"]'));
+    }
+
+    function isNearViewport(element) {
+      const rect = element.getBoundingClientRect();
+      const buffer = heavyBlocks.viewportBufferPx;
+      return rect.bottom >= -buffer && rect.top <= window.innerHeight + buffer;
+    }
+
+    function isHeavyBlock(element) {
+      const rect = element.getBoundingClientRect();
+      const height = Math.max(Math.ceil(rect.height || 0), Math.ceil(element.offsetHeight || 0));
+      if (height >= heavyBlocks.minHeightPx) {
+        return true;
+      }
+      if (element.tagName === "PRE" && (element.textContent || "").length >= heavyBlocks.minTextLength) {
+        return true;
+      }
+      if (element.tagName === "TABLE") {
+        const rows = element.querySelectorAll("tr").length;
+        return rows >= 8;
+      }
+      return false;
+    }
+
+    function applyMediaHints(root) {
+      if (!root) {
+        return;
+      }
+
+      for (const image of root.querySelectorAll("img")) {
+        if (!image.hasAttribute("loading")) image.setAttribute("loading", "lazy");
+        if (!image.hasAttribute("decoding")) image.setAttribute("decoding", "async");
+        if (!image.hasAttribute("fetchpriority")) image.setAttribute("fetchpriority", "low");
+      }
+
+      for (const iframe of root.querySelectorAll("iframe")) {
+        if (!iframe.hasAttribute("loading")) iframe.setAttribute("loading", "lazy");
+      }
+
+      for (const video of root.querySelectorAll("video")) {
+        if (!video.hasAttribute("preload")) video.setAttribute("preload", "metadata");
+      }
+    }
+
+    function cleanupDetachedPlaceholders() {
+      for (const [placeholder] of deferredBlocks) {
+        if (!placeholder.isConnected) {
+          deferredBlocks.delete(placeholder);
+        }
+      }
+    }
+
+    function restorePlaceholder(placeholder) {
+      const snapshot = deferredBlocks.get(placeholder);
+      if (!snapshot) {
+        return false;
+      }
+      if (!placeholder.isConnected) {
+        deferredBlocks.delete(placeholder);
+        return false;
+      }
+      placeholder.replaceWith(snapshot.element);
+      deferredBlocks.delete(placeholder);
+      return true;
+    }
+
+    function deferBlock(element) {
+      if (!element.isConnected) {
+        return false;
+      }
+      if (element.contains(document.activeElement)) {
+        return false;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const height = Math.max(
+        heavyBlocks.minHeightPx,
+        Math.ceil(rect.height || 0),
+        Math.ceil(element.offsetHeight || 0),
+      );
+
+      const placeholder = document.createElement("div");
+      placeholder.className = "convoglide-heavy-placeholder";
+      placeholder.style.height = `${height}px`;
+      placeholder.setAttribute("data-convoglide-heavy-placeholder", "true");
+      placeholder.setAttribute("data-convoglide-heavy-kind", element.tagName.toLowerCase());
+      placeholder.innerHTML = [
+        `<span class="convoglide-heavy-placeholder__label">ConvoGlide deferred ${element.tagName.toLowerCase()} block</span>`,
+      ].join("");
+
+      element.replaceWith(placeholder);
+      deferredBlocks.set(placeholder, {
+        element,
+        height,
+      });
+      return true;
+    }
+
+    function summarize(count) {
+      const summary = `deferred ${count} heavy blocks`;
+      if (summary !== lastSummary) {
+        lastSummary = summary;
+        notify({
+          phase: "lazy-heavy",
+          summary,
+          url: location.pathname,
+        });
+      }
+    }
+
+    function run() {
+      if (!threadRoot || !threadRoot.isConnected) {
+        attach(findThreadRoot());
+        return;
+      }
+
+      applyMediaHints(threadRoot);
+      cleanupDetachedPlaceholders();
+
+      if (Date.now() < pauseUntil) {
+        for (const placeholder of getHeavyPlaceholders(threadRoot)) {
+          restorePlaceholder(placeholder);
+        }
+        summarize(0);
+        return;
+      }
+
+      let deferredCount = 0;
+
+      for (const placeholder of getHeavyPlaceholders(threadRoot)) {
+        if (isNearViewport(placeholder)) {
+          restorePlaceholder(placeholder);
+        } else {
+          deferredCount += 1;
+        }
+      }
+
+      for (const block of getHeavyBlocks(threadRoot)) {
+        if (block.closest('[data-convoglide-virtualized="true"]')) {
+          continue;
+        }
+        if (!isHeavyBlock(block)) {
+          continue;
+        }
+        if (isNearViewport(block)) {
+          continue;
+        }
+        if (deferBlock(block)) {
+          deferredCount += 1;
+        }
+      }
+
+      summarize(deferredCount);
+    }
+
+    function schedule() {
+      if (scheduled) {
+        return;
+      }
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        run();
+      });
+    }
+
+    function attach(root) {
+      if (!root) {
+        return;
+      }
+      if (threadRoot === root) {
+        schedule();
+        return;
+      }
+
+      threadRoot = root;
+      threadObserver?.disconnect();
+      threadObserver = new MutationObserver(() => {
+        schedule();
+      });
+      threadObserver.observe(threadRoot, {
+        childList: true,
+        subtree: true,
+      });
+      schedule();
+    }
+
+    function watchForThreadRoot() {
+      const root = findThreadRoot();
+      if (root) {
+        discoveryObserver?.disconnect();
+        attach(root);
+        return;
+      }
+
+      if (discoveryObserver) {
+        return;
+      }
+
+      discoveryObserver = new MutationObserver(() => {
+        const nextRoot = findThreadRoot();
+        if (nextRoot) {
+          discoveryObserver?.disconnect();
+          discoveryObserver = null;
+          attach(nextRoot);
+        }
+      });
+      discoveryObserver.observe(document, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    window.addEventListener("load", schedule, { once: true });
+
+    document.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        pauseUntil = Date.now() + 15000;
+        for (const placeholder of getHeavyPlaceholders(threadRoot)) {
+          restorePlaceholder(placeholder);
+        }
+        notify({
+          phase: "lazy-heavy-pause",
+          summary: "pause heavy block deferral for in-page search",
+          url: location.pathname,
+        });
+        setTimeout(schedule, 16000);
+      }
+    });
+
+    watchForThreadRoot();
+  }
+
+  function installHeavyBlockLazyActivation() {
+    if (!heavyBlocks.enabled) {
+      return;
+    }
+    createHeavyBlockLazyActivator();
+  }
+
   installFetchHook();
   installVirtualizer();
+  installHeavyBlockLazyActivation();
 
   const api = {
     getEvents() {
@@ -591,6 +880,24 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       ".convoglide-placeholder__label {",
       "  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;",
       "  color: rgba(51, 65, 85, 0.9);",
+      "}",
+      "",
+      ".convoglide-heavy-placeholder {",
+      "  display: flex;",
+      "  align-items: center;",
+      "  justify-content: center;",
+      "  width: 100%;",
+      "  min-height: 120px;",
+      "  padding: 16px;",
+      "  border: 1px dashed rgba(14, 116, 144, 0.28);",
+      "  border-radius: 12px;",
+      "  background: rgba(8, 145, 178, 0.06);",
+      "  box-sizing: border-box;",
+      "}",
+      "",
+      ".convoglide-heavy-placeholder__label {",
+      "  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;",
+      "  color: rgba(14, 116, 144, 0.92);",
       "}",
       "",
       "#thread pre,",

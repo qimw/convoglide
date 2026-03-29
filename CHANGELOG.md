@@ -11,6 +11,7 @@
 - Initial OSS docs set: install, benchmarks, architecture, roadmap, and FAQ
 - Public benchmark snapshot for the real long-thread baseline and payload-trim iterations
 - First public benchmark snapshot for post-load virtualization
+- First public benchmark snapshot for heavy block lazy activation
 - Basic CI validation for generated artifacts, syntax, and naming cleanliness
 - Local automated benchmark lane for real long-thread regression runs
 - Alpha asset packaging for `dist/convoglide.user.js` and `dist/convoglide-extension.zip`
@@ -20,3 +21,4 @@
 - Hard-renamed the project from the prototype naming to `ConvoGlide`
 - Replaced the public runtime API with `window.ConvoGlide`
 - Added the first post-load virtualization MVP to the shared runtime
+- Added heavy block lazy activation for large off-screen code blocks and tables

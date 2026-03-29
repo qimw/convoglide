@@ -1,6 +1,6 @@
 # Architecture
 
-ConvoGlide treats long-thread lag as two different performance problems.
+ConvoGlide treats long-thread lag as a stack of related performance problems.
 
 ## Problem 1: Slow first load
 
@@ -35,6 +35,23 @@ Current strategy:
 
 This is **Optimization 2**.
 
+## Problem 3: Heavy blocks stay expensive inside active turns
+
+Symptoms:
+
+- large code blocks are still expensive even when the surrounding turn stays active
+- big tables can keep layout and paint cost high
+- media-heavy turns still benefit from browser-level lazy hints
+
+Current strategy:
+
+- defer off-screen heavy `pre` blocks
+- defer off-screen heavy `table` blocks
+- apply lazy-loading hints to images, videos, and iframes
+- restore deferred heavy blocks when the user scrolls back
+
+This is **Optimization 3**.
+
 ## Runtime shape
 
 The current alpha uses one shared ChatGPT runtime core:
@@ -43,6 +60,7 @@ The current alpha uses one shared ChatGPT runtime core:
 - config handling
 - debug state publishing
 - post-load virtualization
+- heavy block lazy activation
 
 It is wrapped by:
 
@@ -57,6 +75,7 @@ Separating these two optimization layers keeps the project honest:
 
 - payload trimming helps the page become usable sooner
 - virtualization helps it stay usable longer
+- heavy block deferral reduces cost inside still-active turns
 
 This also makes future benchmark tables easier to interpret.
 
@@ -67,7 +86,7 @@ The current virtualization MVP is optimized first for:
 - reducing off-screen DOM pressure
 - preserving fast restore when the user scrolls back
 
-To do that, it currently keeps detached turn snapshots in memory. That means the alpha can already lower DOM cost a lot, but heap reduction may lag behind DOM reduction until a later pass changes how off-screen content is stored and restored.
+To do that, it currently keeps detached turn and heavy-block snapshots in memory. That means the alpha can already lower DOM cost a lot, but heap reduction may lag behind DOM reduction until a later pass changes how off-screen content is stored and restored.
 
 ## Future architecture direction
 

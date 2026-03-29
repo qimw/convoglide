@@ -16,8 +16,9 @@
 - [x] Optimization 2: post-load virtualization MVP
 - [x] Optimization 2 first benchmark snapshot
 - [x] Local automated benchmark lane
+- [x] Optimization 3: heavy block lazy activation MVP
 - [ ] Optimization 2 tuning
-- [ ] Optimization 3: heavy block lazy activation
+- [ ] Optimization 3 tuning and broader media coverage
 
 ## Distribution work
 

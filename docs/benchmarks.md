@@ -22,6 +22,7 @@ Important observed facts from that thread:
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | stable through 50s | Trim-only path |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current recommended default |
 | 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~97 MB | stable through 50s | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
 
 ## Latest Iteration 2 sample timeline
 
@@ -31,9 +32,10 @@ These checkpoints come from the most recent local `npm run benchmark:lane -- "<c
 | --- | --- | --- | ---: | ---: | ---: | --- |
 | `1000ms` | `ChatGPT` | `userscript` | 591 | 0 | ~98 MB | The script is already injected before the long thread resolves |
 | `8000ms` | `生活 - 酒精反应就医` | `fetch-trim` | 1165 | 0 | ~104 MB | Payload rewrite confirms `1820 -> 81` active nodes |
-| `12000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~154 MB | Virtualization becomes active as the thread settles |
-| `35000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~99 MB | Heap stabilizes after initial restore pressure |
-| `50000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~99 MB | Current steady-state public alpha snapshot |
+| `12000ms` | `生活 - 酒精反应就医` | `fetch-trim` | 1165 | `0` | ~105 MB | Payload rewrite completes before turn-level optimizations take over |
+| `18000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~118 MB | Heavy block deferral and turn virtualization are both active |
+| `35000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~97 MB | Heap stabilizes after initial restore pressure |
+| `50000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~97 MB | Current steady-state public alpha snapshot |
 
 ## Interpretation
 
@@ -60,6 +62,21 @@ The same run also shows an important current tradeoff:
 - the current alpha keeps detached turn snapshots so it can restore off-screen content quickly
 
 That is why the next virtualization work is about tuning and memory behavior, not just proving the concept.
+
+### What Iteration 3 now shows
+
+Iteration 3 adds one more layer after turn-level virtualization:
+
+- off-screen heavy `pre` blocks
+- off-screen heavy `table` blocks
+- media hinting for images, iframes, and videos
+
+On the current benchmark thread, this pass deferred `13` heavy blocks and lowered steady DOM again from about `3.8k` to about `3.5k`.
+
+The tradeoff is similar to Iteration 2:
+
+- DOM pressure drops faster than heap pressure
+- restore-friendly snapshots are still part of the design
 
 ## Measurement method
 
