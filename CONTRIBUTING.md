@@ -22,6 +22,7 @@ Thanks for helping with ConvoGlide.
 - Keep public docs in English first
 - Update benchmark docs when behavior or performance changes
 - Update the README TODO checklist when roadmap items are completed
+- Prefer the local benchmark lane when comparing long-thread performance changes
 - Prefer focused PRs over mixed unrelated changes
 
 ## Reporting bugs

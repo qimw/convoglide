@@ -94,6 +94,32 @@ node scripts/probe-userscript-injection.mjs https://chatgpt.com/
 node scripts/probe-userscript-first-load.mjs "<chat-url>" 80
 ```
 
+### Run the local benchmark lane
+
+This is the easiest repeatable way to generate a fresh benchmark report for a real long thread.
+
+Before using it, log into ChatGPT once in the dedicated Chrome profile created by `./scripts/launch-test-chrome.sh`.
+
+```bash
+npm run benchmark:lane -- "<chat-url>" --keep 80
+```
+
+Outputs:
+
+- `artifacts/benchmarks/latest.json`
+- `artifacts/benchmarks/latest.md`
+
+### Package alpha assets
+
+```bash
+npm run package:alpha
+```
+
+Outputs:
+
+- `dist/convoglide.user.js`
+- `dist/convoglide-extension.zip`
+
 ## How to confirm it is working
 
 - A `ConvoGlide` badge appears near the top-right corner

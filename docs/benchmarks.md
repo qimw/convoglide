@@ -21,21 +21,19 @@ Important observed facts from that thread:
 | 0 | Baseline | ~5.0 MB | ~1820 | 0 | hard to keep stable | n/a | degrades | Real long thread becomes heavy once the conversation view fully arrives |
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | stable through 50s | Trim-only path |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current recommended default |
-| 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~102 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
+| 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
 
 ## Latest Iteration 2 sample timeline
 
-These checkpoints come from the latest `probe-userscript-first-load.mjs` run against the current benchmark thread with keep `80`.
+These checkpoints come from the most recent local `npm run benchmark:lane -- "<chat-url>" --keep 80` run against the current benchmark thread.
 
 | Sample | Title | Phase | DOM nodes | Virtualized turns | Heap | Notes |
 | --- | --- | --- | ---: | ---: | ---: | --- |
-| ~3.1s | `ChatGPT` | `userscript` | 389 | 0 | ~22 MB | Script is installed before the thread title resolves |
-| ~10.1s | `ChatGPT` | `userscript` | 1061 | 0 | ~59 MB | Shell is up but the long conversation is not fully in yet |
-| ~14.1s | `生活 - 酒精反应就医` | `fetch-pass` | 1165 | 0 | ~76 MB | Trimmed payload is already within the current keep window |
-| ~20.1s | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~124 MB | Virtualization is fully active by the time the thread settles |
-| ~27.1s | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~125 MB | First steady-state checkpoint |
-| ~37.1s | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~102 MB | DOM remains stable while heap settles down |
-| ~52.1s | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~102 MB | Current steady-state public alpha snapshot |
+| `1000ms` | `ChatGPT` | `userscript` | 591 | 0 | ~98 MB | The script is already injected before the long thread resolves |
+| `8000ms` | `生活 - 酒精反应就医` | `fetch-trim` | 1165 | 0 | ~104 MB | Payload rewrite confirms `1820 -> 81` active nodes |
+| `12000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~154 MB | Virtualization becomes active as the thread settles |
+| `35000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~99 MB | Heap stabilizes after initial restore pressure |
+| `50000ms` | `生活 - 酒精反应就医` | `virtualizer` | 3811 | `33/45` | ~99 MB | Current steady-state public alpha snapshot |
 
 ## Interpretation
 
@@ -69,6 +67,7 @@ Current measurements rely on the Chrome remote-debugging scripts in [`scripts/`]
 
 - `scripts/probe-userscript-injection.mjs`
 - `scripts/probe-userscript-first-load.mjs`
+- `scripts/run-benchmark-lane.mjs`
 - `scripts/analyze-conversation-body.mjs`
 - `scripts/analyze-followup-payloads.mjs`
 - `scripts/estimate-trim-impact.mjs`

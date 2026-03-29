@@ -17,7 +17,10 @@
     "build": "node scripts/build-runtime.mjs",
     "analyze:body": "node scripts/analyze-conversation-body.mjs",
     "analyze:followup": "node scripts/analyze-followup-payloads.mjs",
+    "benchmark:lane": "node scripts/run-benchmark-lane.mjs",
     "estimate:trim": "node scripts/estimate-trim-impact.mjs",
+    "package:alpha": "node scripts/package-extension.mjs",
+    "package:extension": "node scripts/package-extension.mjs",
     "probe:first-load": "node scripts/probe-userscript-first-load.mjs",
     "probe:injection": "node scripts/probe-userscript-injection.mjs"
   }

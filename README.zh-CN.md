@@ -32,7 +32,7 @@ ConvoGlide 主要针对两类性能问题：
 | 0 | 基线 | ~5.0 MB | ~1820 | 难以稳定探测 | n/a | 真实长线程在完全加载后会很重 |
 | 1A | 保留最近 `120` 条消息 | ~0.38 MB | 121 | ~11.8k | ~112 MB | 50 秒内仍可稳定探测 |
 | 1B | 保留最近 `80` 条消息 | ~0.30 MB | 81 | ~9.1k | ~99 MB | 当前默认推荐值 |
-| 2 | `80` 档 + 加载后虚拟化 MVP | ~0.30 MB | 81 | ~3.8k | ~102 MB | 已虚拟化 `33/45` 个 turn，DOM 相比 1B 再降约 58% |
+| 2 | `80` 档 + 加载后虚拟化 MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | 已虚拟化 `33/45` 个 turn，DOM 相比 1B 再降约 58% |
 
 详细结果见 [docs/benchmarks.md](docs/benchmarks.md)
 
@@ -46,9 +46,10 @@ ConvoGlide 主要针对两类性能问题：
 - [x] Chrome / Edge 侧载扩展路径
 - [x] Iteration 0 和 Iteration 1 的公开 benchmark 摘要
 - [x] 首版加载后虚拟化 benchmark 摘要
+- [x] 本地自动化 benchmark lane
+- [x] extension zip 打包脚本
 - [ ] 加载后虚拟化调优
 - [ ] 长代码块、表格、图片、媒体的更强懒激活
-- [ ] 自动化回归 benchmark 流程
 - [ ] Gemini 适配原型
 - [ ] Claude 调研
 

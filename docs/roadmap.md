@@ -15,14 +15,15 @@
 - [x] Optimization 1: pre-hydration payload trimming
 - [x] Optimization 2: post-load virtualization MVP
 - [x] Optimization 2 first benchmark snapshot
+- [x] Local automated benchmark lane
 - [ ] Optimization 2 tuning
 - [ ] Optimization 3: heavy block lazy activation
-- [ ] Automated benchmark regression workflow
 
 ## Distribution work
 
 - [x] Side-load extension path for Chrome / Edge
 - [x] Simpler one-click userscript distribution
+- [x] Packaged extension zip build script
 - [ ] Packaged extension zip in releases
 - [ ] Browser store readiness review
 

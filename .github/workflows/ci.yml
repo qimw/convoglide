@@ -39,6 +39,14 @@ jobs:
           node --check scripts/probe-userscript-injection.mjs
           node --check scripts/probe-userscript-first-load.mjs
 
+      - name: Package alpha assets
+        run: npm run package:alpha
+
+      - name: Verify packaged files exist
+        run: |
+          test -f dist/convoglide.user.js
+          test -f dist/convoglide-extension.zip
+
       - name: Enforce ConvoGlide naming
         run: |
           if rg -n "MilkGPT|milkgpt|window\\.MilkGPT|__MILKGPT|__milkgpt|x-milkgpt" README.md README.zh-CN.md docs src extension userscript scripts package.json; then

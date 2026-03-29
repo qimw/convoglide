@@ -32,7 +32,7 @@ Measurements below come from a real very long ChatGPT conversation used as the c
 | 0 | Baseline | ~5.0 MB | ~1820 | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Current recommended default |
-| 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~102 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
+| 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
 
 More detail: [docs/benchmarks.md](docs/benchmarks.md)
 
@@ -46,9 +46,10 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 - [x] Chrome / Edge side-load extension path
 - [x] Public benchmark summary for Iteration 0 and Iteration 1
 - [x] First public post-load virtualization benchmark snapshot
+- [x] Local automated benchmark lane
+- [x] Packaged extension zip build script
 - [ ] Post-load virtualization tuning
 - [ ] Heavy block lazy activation for code blocks, tables, images, and media
-- [ ] Automated regression benchmark lane
 - [ ] Gemini adapter prototype
 - [ ] Claude adapter research
 
@@ -92,6 +93,7 @@ Architecture detail: [docs/architecture.md](docs/architecture.md)
 - FAQ: [docs/faq.md](docs/faq.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security: [SECURITY.md](SECURITY.md)
+- Alpha asset packaging: `npm run package:alpha`
 
 ## FAQ
 
@@ -113,6 +115,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added the first post-load virtualization MVP to the shared ChatGPT runtime core
 - `2026-03-29`: Added one-click userscript install and published the first public virtualization benchmark snapshot
 - `2026-03-29`: Added a basic CI workflow to validate generated artifacts, syntax, and naming cleanliness
+- `2026-03-29`: Added a local benchmark lane and alpha asset packaging workflow for maintainers
 
 ## License
 
