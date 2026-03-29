@@ -112,6 +112,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Published the first public benchmark snapshot for the real long-thread baseline and payload-trim iterations
 - `2026-03-29`: Added the first post-load virtualization MVP to the shared ChatGPT runtime core
 - `2026-03-29`: Added one-click userscript install and published the first public virtualization benchmark snapshot
+- `2026-03-29`: Added a basic CI workflow to validate generated artifacts, syntax, and naming cleanliness
 
 ## License
 

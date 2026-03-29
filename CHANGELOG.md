@@ -11,6 +11,7 @@
 - Initial OSS docs set: install, benchmarks, architecture, roadmap, and FAQ
 - Public benchmark snapshot for the real long-thread baseline and payload-trim iterations
 - First public benchmark snapshot for post-load virtualization
+- Basic CI validation for generated artifacts, syntax, and naming cleanliness
 
 ### Changed
 

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build generated runtime files
+        run: npm run build
+
+      - name: Verify generated artifacts are committed
+        run: git diff --exit-code -- userscript/convoglide.user.js extension/page-hook.js
+
+      - name: Validate syntax
+        run: |
+          node --check src/runtime/chatgpt-core.js
+          node --check userscript/convoglide.user.js
+          node --check extension/page-hook.js
+          node --check extension/content.js
+          node --check scripts/build-runtime.mjs
+          node --check scripts/probe-userscript-injection.mjs
+          node --check scripts/probe-userscript-first-load.mjs
+
+      - name: Enforce ConvoGlide naming
+        run: |
+          if rg -n "MilkGPT|milkgpt|window\\.MilkGPT|__MILKGPT|__milkgpt|x-milkgpt" README.md README.zh-CN.md docs src extension userscript scripts package.json; then
+            echo "Legacy prototype naming is still present."
+            exit 1
+          fi
