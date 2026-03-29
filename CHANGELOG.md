@@ -14,6 +14,7 @@
 - First public benchmark snapshot for heavy block lazy activation
 - Basic CI validation for generated artifacts, syntax, and naming cleanliness
 - Local automated benchmark lane for real long-thread regression runs
+- Benchmark history capture and report comparison tooling
 - Alpha asset packaging for `dist/convoglide.user.js` and `dist/convoglide-extension.zip`
 
 ### Changed

@@ -33,7 +33,7 @@ ConvoGlide 主要针对两类性能问题：
 | 1A | 保留最近 `120` 条消息 | ~0.38 MB | 121 | ~11.8k | ~112 MB | 50 秒内仍可稳定探测 |
 | 1B | 保留最近 `80` 条消息 | ~0.30 MB | 81 | ~9.1k | ~99 MB | 当前默认推荐值 |
 | 2 | `80` 档 + 加载后虚拟化 MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | 已虚拟化 `33/45` 个 turn，DOM 相比 1B 再降约 58% |
-| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~97 MB | 额外延迟了 `13` 个重块，DOM 相比 2 再降约 9% |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~100 MB | 额外延迟了 `13` 个重块，DOM 相比 2 再降约 9% |
 
 详细结果见 [docs/benchmarks.md](docs/benchmarks.md)
 

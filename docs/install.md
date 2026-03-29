@@ -108,6 +108,16 @@ Outputs:
 
 - `artifacts/benchmarks/latest.json`
 - `artifacts/benchmarks/latest.md`
+- `artifacts/benchmarks/history/<timestamp>.json`
+- `artifacts/benchmarks/history/<timestamp>.md`
+
+### Compare two benchmark reports
+
+```bash
+npm run benchmark:compare -- \
+  artifacts/benchmarks/history/<base>.json \
+  artifacts/benchmarks/history/<head>.json
+```
 
 ### Package alpha assets
 

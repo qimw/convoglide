@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
@@ -66,11 +66,28 @@ function runJsonScript(scriptPath, args = []) {
   });
 
   if (result.status !== 0) {
-    process.stderr.write(result.stderr || result.stdout || "");
-    process.exit(result.status ?? 1);
+    throw new Error(result.stderr || result.stdout || `Failed to run ${scriptPath}`);
   }
 
   return JSON.parse(result.stdout);
+}
+
+async function runJsonScriptWithRetry(scriptPath, args = [], attempts = 5) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return runJsonScript(scriptPath, args);
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  throw lastError || new Error(`Failed to run ${scriptPath}`);
 }
 
 function summarize(firstLoad, injection, url, keep) {
@@ -134,6 +151,10 @@ function renderMarkdown(report) {
   ].join("\n");
 }
 
+function toStamp(isoString) {
+  return isoString.replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
 const args = parseArgs(process.argv.slice(2));
 
 let launchProcess = null;
@@ -152,16 +173,28 @@ if (!debuggerReady) {
   process.exit(1);
 }
 
-const injection = runJsonScript(resolve(repoRoot, "scripts/probe-userscript-injection.mjs"), ["https://chatgpt.com/"]);
-const firstLoad = runJsonScript(resolve(repoRoot, "scripts/probe-userscript-first-load.mjs"), [args.url, String(args.keep)]);
+const injection = await runJsonScriptWithRetry(resolve(repoRoot, "scripts/probe-userscript-injection.mjs"), [
+  "https://chatgpt.com/",
+]);
+const firstLoad = await runJsonScriptWithRetry(resolve(repoRoot, "scripts/probe-userscript-first-load.mjs"), [
+  args.url,
+  String(args.keep),
+]);
 const report = summarize(firstLoad, injection, args.url, args.keep);
 const markdown = renderMarkdown(report);
 
 mkdirSync(args.outDir, { recursive: true });
+const historyDir = resolve(args.outDir, "history");
+mkdirSync(historyDir, { recursive: true });
 const jsonPath = resolve(args.outDir, "latest.json");
 const markdownPath = resolve(args.outDir, "latest.md");
+const stamp = toStamp(report.createdAt);
+const historyJsonPath = resolve(historyDir, `${stamp}.json`);
+const historyMarkdownPath = resolve(historyDir, `${stamp}.md`);
 writeFileSync(jsonPath, JSON.stringify(report, null, 2));
 writeFileSync(markdownPath, `${markdown}\n`);
+copyFileSync(jsonPath, historyJsonPath);
+copyFileSync(markdownPath, historyMarkdownPath);
 
 console.log(
   JSON.stringify(
@@ -169,6 +202,8 @@ console.log(
       ok: true,
       jsonPath,
       markdownPath,
+      historyJsonPath,
+      historyMarkdownPath,
       summary: report.summary,
     },
     null,

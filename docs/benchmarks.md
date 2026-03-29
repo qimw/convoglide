@@ -22,11 +22,11 @@ Important observed facts from that thread:
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | stable through 50s | Trim-only path |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current recommended default |
 | 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
-| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~97 MB | stable through 50s | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~100 MB | stable through 50s | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
 
 ## Latest Iteration 2 sample timeline
 
-These checkpoints come from the most recent local `npm run benchmark:lane -- "<chat-url>" --keep 80` run against the current benchmark thread.
+These checkpoints come from a recent local `npm run benchmark:lane -- "<chat-url>" --keep 80` run against the current benchmark thread.
 
 | Sample | Title | Phase | DOM nodes | Virtualized turns | Heap | Notes |
 | --- | --- | --- | ---: | ---: | ---: | --- |
@@ -85,8 +85,18 @@ Current measurements rely on the Chrome remote-debugging scripts in [`scripts/`]
 - `scripts/probe-userscript-injection.mjs`
 - `scripts/probe-userscript-first-load.mjs`
 - `scripts/run-benchmark-lane.mjs`
+- `scripts/compare-benchmark-reports.mjs`
 - `scripts/analyze-conversation-body.mjs`
 - `scripts/analyze-followup-payloads.mjs`
 - `scripts/estimate-trim-impact.mjs`
+
+The benchmark lane writes:
+
+- `artifacts/benchmarks/latest.json`
+- `artifacts/benchmarks/latest.md`
+- `artifacts/benchmarks/history/<timestamp>.json`
+- `artifacts/benchmarks/history/<timestamp>.md`
+
+Use `npm run benchmark:compare -- <base.json> <head.json>` to compare two saved reports.
 
 All headline results shown in the README should be derived from this document.

@@ -23,6 +23,7 @@ Thanks for helping with ConvoGlide.
 - Update benchmark docs when behavior or performance changes
 - Update the README TODO checklist when roadmap items are completed
 - Prefer the local benchmark lane when comparing long-thread performance changes
+- Save or compare benchmark history reports when you are claiming a measurable improvement
 - Prefer focused PRs over mixed unrelated changes
 
 ## Reporting bugs

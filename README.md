@@ -33,7 +33,7 @@ Measurements below come from a real very long ChatGPT conversation used as the c
 | 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
 | 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Current recommended default |
 | 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
-| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~97 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~100 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
 
 More detail: [docs/benchmarks.md](docs/benchmarks.md)
 
@@ -123,6 +123,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added a basic CI workflow to validate generated artifacts, syntax, and naming cleanliness
 - `2026-03-29`: Added a local benchmark lane and alpha asset packaging workflow for maintainers
 - `2026-03-29`: Added heavy block lazy activation for large off-screen code blocks and tables
+- `2026-03-29`: Added benchmark history capture and a report comparison tool for iteration-to-iteration reviews
 
 ## License
 
