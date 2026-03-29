@@ -43,6 +43,17 @@ Outputs:
 
 The lane now retries first-load capture automatically when navigation succeeds but no usable samples are collected.
 
+Each saved JSON report also includes:
+
+- `firstResolvedTitleSample`
+- `stableSample`
+- `firstVirtualizerSample`
+
+Those fields are the easiest way to explain results in plain language, for example:
+
+- when the target conversation title first appeared
+- when the optimized page reached a stable state
+
 ## Compare two saved runs
 
 ```bash

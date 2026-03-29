@@ -1,10 +1,153 @@
 import { createCdpClient, getFirstPageTarget } from "./cdp.js";
 import { buildInjectedUserScript } from "./userscript-source.js";
 
-const navigateUrl =
-  process.argv[2] ||
-  "https://chatgpt.com/g/g-p-68f4c49db7808191aa939c964a7e19f8-sheng-huo/c/699b2b0c-5dc4-8333-a6dd-e88ac7753511";
-const maxMessageNodes = process.argv[3] ? Number(process.argv[3]) : Number.NaN;
+function parseArgs(argv) {
+  const args = {
+    navigateUrl:
+      argv[0] ||
+      "https://chatgpt.com/g/g-p-68f4c49db7808191aa939c964a7e19f8-sheng-huo/c/699b2b0c-5dc4-8333-a6dd-e88ac7753511",
+    maxMessageNodes: argv[1] ? Number(argv[1]) : Number.NaN,
+    plain: false,
+  };
+
+  for (let index = 2; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--plain") {
+      args.plain = true;
+    }
+  }
+
+  return args;
+}
+
+function makeSnapshotExpression() {
+  return `(() => ({
+    title: document.title,
+    readyState: document.readyState,
+    href: location.href,
+    hasBadge: !!document.getElementById('convoglide-badge'),
+    badgeText: document.getElementById('convoglide-badge')?.innerText || null,
+    phase: document.documentElement.dataset.convoglidePhase || null,
+    summary: document.documentElement.dataset.convoglideSummary || null,
+    eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
+    domNodes: document.getElementsByTagName('*').length,
+    virtualizedTurns: document.querySelectorAll('[data-convoglide-virtualized="true"]').length,
+    heavyPlaceholders: document.querySelectorAll('[data-convoglide-heavy-placeholder="true"]').length,
+    heapMB: performance.memory?.usedJSHeapSize ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
+  }))()`;
+}
+
+function makeScrollExpression() {
+  return `(() => new Promise((resolve) => {
+    function findScrollRoot() {
+      const candidates = [document.scrollingElement, document.documentElement, document.body].filter(Boolean);
+      for (const element of document.querySelectorAll('*')) {
+        const style = getComputedStyle(element);
+        const overflowY = style.overflowY || '';
+        if (!/(auto|scroll|overlay)/.test(overflowY)) {
+          continue;
+        }
+        if (element.scrollHeight <= element.clientHeight + 32) {
+          continue;
+        }
+        candidates.push(element);
+      }
+
+      let best = candidates[0] || document.documentElement;
+      let bestDistance = Math.max(0, best.scrollHeight - best.clientHeight);
+      for (const candidate of candidates) {
+        const distance = Math.max(0, candidate.scrollHeight - candidate.clientHeight);
+        if (distance > bestDistance) {
+          best = candidate;
+          bestDistance = distance;
+        }
+      }
+      return best;
+    }
+
+    const root = findScrollRoot();
+    const startTop = root.scrollTop;
+    const viewportHeight = root === document.scrollingElement || root === document.documentElement || root === document.body
+      ? window.innerHeight
+      : root.clientHeight;
+    const maxTop = Math.max(0, root.scrollHeight - viewportHeight);
+    const targetTop = Math.min(maxTop, Math.max(viewportHeight * 4, 2400));
+    if (targetTop <= startTop) {
+      resolve({
+        ok: true,
+        distance: 0,
+        averageFrameMs: 0,
+        worstFrameMs: 0,
+        framesOver33: 0,
+        framesOver50: 0,
+        totalFrames: 0,
+        rootTag: root?.tagName || null
+      });
+      return;
+    }
+
+    const frames = [];
+    let previous = performance.now();
+    let rafCount = 0;
+
+    function finish() {
+      root.scrollTop = startTop;
+      const usable = frames.slice(1);
+      const averageFrameMs = usable.length
+        ? Math.round((usable.reduce((sum, value) => sum + value, 0) / usable.length) * 10) / 10
+        : 0;
+      const worstFrameMs = usable.length ? Math.round(Math.max(...usable) * 10) / 10 : 0;
+      const framesOver33 = usable.filter((value) => value > 33).length;
+      const framesOver50 = usable.filter((value) => value > 50).length;
+      resolve({
+        ok: true,
+        distance: Math.round(targetTop - startTop),
+        averageFrameMs,
+        worstFrameMs,
+        framesOver33,
+        framesOver50,
+        totalFrames: usable.length,
+        rootTag: root?.tagName || null
+      });
+    }
+
+    function tick(now) {
+      frames.push(now - previous);
+      previous = now;
+      rafCount += 1;
+      const progress = Math.min(1, rafCount / 120);
+      const nextTop = startTop + (targetTop - startTop) * progress;
+      root.scrollTop = nextTop;
+      if (progress >= 1) {
+        finish();
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }))()`;
+}
+
+function classifySmoothness(scrollMetrics) {
+  if (!scrollMetrics?.ok) {
+    return "unknown";
+  }
+  if (scrollMetrics.totalFrames === 0) {
+    return "not-scrollable";
+  }
+  if (scrollMetrics.framesOver50 <= 1 && scrollMetrics.averageFrameMs <= 20) {
+    return "smooth";
+  }
+  if (scrollMetrics.framesOver50 <= 4 && scrollMetrics.averageFrameMs <= 28) {
+    return "mostly-smooth";
+  }
+  return "janky";
+}
+
+const args = parseArgs(process.argv.slice(2));
+const navigateUrl = args.navigateUrl;
+const maxMessageNodes = args.maxMessageNodes;
 const sampleTimesMs = [1000, 2000, 4000, 8000, 12000, 18000, 25000, 35000, 50000];
 
 const target = await getFirstPageTarget();
@@ -31,20 +174,7 @@ async function sample(label) {
     const runtime = await send(
       "Runtime.evaluate",
       {
-        expression: `(() => ({
-          title: document.title,
-          readyState: document.readyState,
-          href: location.href,
-          hasBadge: !!document.getElementById('convoglide-badge'),
-          badgeText: document.getElementById('convoglide-badge')?.innerText || null,
-          phase: document.documentElement.dataset.convoglidePhase || null,
-          summary: document.documentElement.dataset.convoglideSummary || null,
-          eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
-          domNodes: document.getElementsByTagName('*').length,
-          virtualizedTurns: document.querySelectorAll('[data-convoglide-virtualized="true"]').length,
-          heavyPlaceholders: document.querySelectorAll('[data-convoglide-heavy-placeholder="true"]').length,
-          heapMB: performance.memory?.usedJSHeapSize ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
-        }))()`,
+        expression: makeSnapshotExpression(),
         returnByValue: true,
       },
       3000,
@@ -52,6 +182,26 @@ async function sample(label) {
     samples.push({ label, elapsedMs, ok: true, ...runtime.result.value });
   } catch (error) {
     samples.push({ label, elapsedMs, ok: false, error: error.message });
+  }
+}
+
+async function measureScroll() {
+  try {
+    const runtime = await send(
+      "Runtime.evaluate",
+      {
+        expression: makeScrollExpression(),
+        awaitPromise: true,
+        returnByValue: true,
+      },
+      30000,
+    );
+    return runtime.result.value;
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -78,7 +228,9 @@ ws.addEventListener("open", async () => {
     await send("Page.enable");
     await send("Runtime.enable");
     await send("Network.enable");
-    await send("Page.addScriptToEvaluateOnNewDocument", { source }, 10000);
+    if (!args.plain) {
+      await send("Page.addScriptToEvaluateOnNewDocument", { source }, 10000);
+    }
     await send("Page.navigate", { url: navigateUrl }, 10000);
 
     for (const ms of sampleTimesMs) {
@@ -88,15 +240,31 @@ ws.addEventListener("open", async () => {
     }
 
     setTimeout(() => {
-      finish({
-        ok: true,
-        navigateUrl,
-        maxMessageNodes: Number.isFinite(maxMessageNodes) ? maxMessageNodes : null,
-        samples,
-        networkEvents,
+      const okSamples = samples.filter((sample) => sample.ok);
+      const firstResolvedTitleSample = okSamples.find((sample) => sample.title && sample.title !== "ChatGPT") || null;
+      const stableSample = okSamples.at(-1) || null;
+      measureScroll().then((scrollMetrics) => {
+        finish({
+          ok: true,
+          mode: args.plain ? "plain" : "optimized",
+          navigateUrl,
+          maxMessageNodes: Number.isFinite(maxMessageNodes) ? maxMessageNodes : null,
+          samples,
+          networkEvents,
+          firstResolvedTitleSample,
+          stableSample,
+          scrollMetrics,
+          scrollVerdict: classifySmoothness(scrollMetrics),
+        });
       });
     }, Math.max(...sampleTimesMs) + 4000);
   } catch (error) {
-    finish({ ok: false, error: error.message, samples, networkEvents });
+    finish({
+      ok: false,
+      mode: args.plain ? "plain" : "optimized",
+      error: error.message,
+      samples,
+      networkEvents,
+    });
   }
 });
