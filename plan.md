@@ -57,6 +57,9 @@
 - 已加入公开 runtime flow 示意图
 - 已加入 docs consistency 与 alpha package verification 脚本
 - 已完成一次带恢复交互改动后的 benchmark 回归确认
+- 已补充 benchmark workflow 文档
+- 已把 benchmark lane 加固为“空样本自动重试，空成功不落盘”
+- 已做一轮 post-load 扫描调优，并完成回归 benchmark
 
 ## 三、总目标
 
@@ -97,6 +100,12 @@
 - 改善 placeholder 尺寸稳定性
 - 尽量减少 layout thrash
 - 优化 `Ctrl/Cmd + F` 搜索期间的暂停与恢复体验
+
+本轮已额外完成：
+
+- 后台标签页不再继续做无意义扫描
+- heavy block 分类结果做了缓存
+- benchmark lane 对空样本失败更敏感
 
 验收标准：
 
