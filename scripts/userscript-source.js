@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 export function readUserScriptSource() {
-  return readFileSync(new URL("../userscript/milkgpt.user.js", import.meta.url), "utf8");
+  return readFileSync(new URL("../userscript/convoglide.user.js", import.meta.url), "utf8");
 }
 
 export function buildInjectedUserScript(maxMessageNodes) {
@@ -11,7 +11,7 @@ export function buildInjectedUserScript(maxMessageNodes) {
   }
 
   return [
-    `localStorage.setItem("milkgpt:max-message-nodes", "${Math.floor(maxMessageNodes)}");`,
+    `localStorage.setItem("convoglide:max-message-nodes", "${Math.floor(maxMessageNodes)}");`,
     source,
   ].join("\n");
 }

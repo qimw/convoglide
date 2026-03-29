@@ -1,6 +1,6 @@
 (() => {
-  const BADGE_ID = "milkgpt-badge";
-  const DEBUG_EVENT = "__milkgpt_debug";
+  const BADGE_ID = "convoglide-badge";
+  const DEBUG_EVENT = "__convoglide_debug";
 
   function ensureBadge() {
     if (!document.body) {
@@ -15,10 +15,10 @@
     badge = document.createElement("aside");
     badge.id = BADGE_ID;
     badge.innerHTML = [
-      "<strong>MilkGPT</strong>",
-      '<span class="milkgpt-line" data-role="phase">phase: content-script</span>',
-      '<span class="milkgpt-line" data-role="detail">detail: booting</span>',
-      '<span class="milkgpt-line" data-role="url">url: pending</span>',
+      "<strong>ConvoGlide</strong>",
+      '<span class="convoglide-line" data-role="phase">phase: content-script</span>',
+      '<span class="convoglide-line" data-role="detail">detail: booting</span>',
+      '<span class="convoglide-line" data-role="url">url: pending</span>',
     ].join("");
     document.body.appendChild(badge);
     return badge;
@@ -45,8 +45,8 @@
 
   function writeState(detail = {}) {
     try {
-      document.documentElement.dataset.milkgptPhase = detail.phase || detail.event || "content-script";
-      document.documentElement.dataset.milkgptSummary = (detail.summary || "").slice(0, 120);
+      document.documentElement.dataset.convoglidePhase = detail.phase || detail.event || "content-script";
+      document.documentElement.dataset.convoglideSummary = (detail.summary || "").slice(0, 120);
     } catch {}
     updateBadge(detail);
   }

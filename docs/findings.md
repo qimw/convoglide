@@ -13,6 +13,6 @@ Most important numbers from the target conversation:
 
 Observed runtime behavior on the target conversation:
 - Without interception, the page eventually becomes hard to probe once the real conversation view is reached
-- With MilkGPT at `120`, the conversation stays probeable through 50 seconds, but steady-state DOM still reaches roughly 11.8k nodes
-- With MilkGPT at `80`, the conversation stays probeable through 50 seconds and steady-state DOM drops to roughly 9.1k nodes
+- With ConvoGlide at `120`, the conversation stays probeable through 50 seconds, but steady-state DOM still reaches roughly 11.8k nodes
+- With ConvoGlide at `80`, the conversation stays probeable through 50 seconds and steady-state DOM drops to roughly 9.1k nodes
 - At `80`, the rendered conversation surface was about 45 message nodes in the tested session

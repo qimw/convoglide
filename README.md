@@ -61,7 +61,7 @@ Current prototype layout:
 
 Current recommended prototype entry:
 
-- `userscript/milkgpt.user.js`
+- `userscript/convoglide.user.js`
 
 ## Current status
 

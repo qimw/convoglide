@@ -5,6 +5,7 @@
   "description": "Experimental long-chat performance optimizer for AI web apps.",
   "type": "module",
   "scripts": {
+    "build": "node scripts/build-runtime.mjs",
     "analyze:body": "node scripts/analyze-conversation-body.mjs",
     "analyze:followup": "node scripts/analyze-followup-payloads.mjs",
     "estimate:trim": "node scripts/estimate-trim-impact.mjs",

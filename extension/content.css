@@ -1,43 +1,65 @@
 :root {
-  --milkgpt-badge-bg: rgba(22, 28, 36, 0.92);
-  --milkgpt-badge-fg: #f8fafc;
-  --milkgpt-badge-muted: #cbd5e1;
-  --milkgpt-badge-accent: #7dd3fc;
+  --convoglide-badge-bg: rgba(22, 28, 36, 0.92);
+  --convoglide-badge-fg: #f8fafc;
+  --convoglide-badge-muted: #cbd5e1;
+  --convoglide-badge-accent: #7dd3fc;
+  --convoglide-placeholder-bg: rgba(15, 23, 42, 0.06);
+  --convoglide-placeholder-border: rgba(148, 163, 184, 0.28);
 }
 
-#milkgpt-badge {
+#convoglide-badge {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 2147483647;
-  min-width: 180px;
+  min-width: 190px;
   max-width: min(360px, calc(100vw - 32px));
   padding: 10px 12px;
   border-radius: 12px;
-  background: var(--milkgpt-badge-bg);
-  color: var(--milkgpt-badge-fg);
+  background: var(--convoglide-badge-bg);
+  color: var(--convoglide-badge-fg);
   font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
   backdrop-filter: blur(10px);
   pointer-events: none;
 }
 
-#milkgpt-badge strong {
+#convoglide-badge strong {
   display: block;
   margin-bottom: 4px;
-  color: var(--milkgpt-badge-accent);
+  color: var(--convoglide-badge-accent);
   font-size: 12px;
 }
 
-#milkgpt-badge .milkgpt-line {
+#convoglide-badge .convoglide-line {
   display: block;
-  color: var(--milkgpt-badge-muted);
+  color: var(--convoglide-badge-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.convoglide-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 96px;
+  padding: 16px;
+  border: 1px dashed var(--convoglide-placeholder-border);
+  border-radius: 12px;
+  background: var(--convoglide-placeholder-bg);
+  box-sizing: border-box;
+}
+
+.convoglide-placeholder__label {
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgba(51, 65, 85, 0.9);
+}
+
 #thread pre,
+#thread section[data-testid^="conversation-turn-"],
+#thread [data-message-id],
 #thread table,
 #thread img,
 #thread video,

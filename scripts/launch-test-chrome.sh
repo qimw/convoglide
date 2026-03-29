@@ -1,8 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
-PROFILE_DIR="${MILKGPT_PROFILE_DIR:-/tmp/chatgpt-perf-test-profile}"
-PORT="${MILKGPT_REMOTE_DEBUG_PORT:-9223}"
+PROFILE_DIR="${CONVOGLIDE_PROFILE_DIR:-/tmp/chatgpt-perf-test-profile}"
+PORT="${CONVOGLIDE_REMOTE_DEBUG_PORT:-9223}"
 URL="${1:-about:blank}"
 
 pkill -f "$PROFILE_DIR" >/dev/null 2>&1 || true

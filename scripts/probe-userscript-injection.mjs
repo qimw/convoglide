@@ -29,11 +29,12 @@ ws.addEventListener("open", async () => {
       expression: `(() => ({
         title: document.title,
         path: location.pathname,
-        hasBadge: !!document.getElementById('milkgpt-badge'),
-        badgeText: document.getElementById('milkgpt-badge')?.innerText || null,
-        phase: document.documentElement.dataset.milkgptPhase || null,
-        summary: document.documentElement.dataset.milkgptSummary || null,
-        eventCount: Array.isArray(window.__MILKGPT_EVENTS) ? window.__MILKGPT_EVENTS.length : 0
+        hasBadge: !!document.getElementById('convoglide-badge'),
+        badgeText: document.getElementById('convoglide-badge')?.innerText || null,
+        phase: document.documentElement.dataset.convoglidePhase || null,
+        summary: document.documentElement.dataset.convoglideSummary || null,
+        eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
+        apiVisible: !!window.ConvoGlide
       }))()`,
       returnByValue: true,
     });

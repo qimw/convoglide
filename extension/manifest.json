@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MilkGPT",
+  "name": "ConvoGlide",
   "version": "0.1.0",
-  "description": "Prototype ChatGPT performance optimizer for long conversations.",
+  "description": "Experimental ChatGPT performance optimizer for long conversations.",
   "content_scripts": [
     {
       "matches": [
