@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 320" role="img" aria-labelledby="title desc">
+  <title id="title">ConvoGlide runtime flow</title>
+  <desc id="desc">A three-step diagram showing payload trimming, turn virtualization, and heavy block lazy activation.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#eef2ff" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" x2="100%" y1="0%" y2="0%">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="320" rx="24" fill="url(#bg)" />
+  <text x="60" y="58" fill="#0f172a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700">
+    ConvoGlide runtime flow
+  </text>
+  <text x="60" y="92" fill="#475569" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18">
+    ChatGPT-first alpha pipeline for slow first load and slow after load.
+  </text>
+
+  <g transform="translate(60 128)">
+    <rect width="280" height="128" rx="20" fill="#ffffff" stroke="#cbd5e1" />
+    <rect x="18" y="18" width="64" height="32" rx="16" fill="#dcfce7" />
+    <text x="50" y="39" text-anchor="middle" fill="#166534" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="700">1</text>
+    <text x="18" y="74" fill="#0f172a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Payload trim</text>
+    <text x="18" y="102" fill="#475569" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">
+      Shrinks oversized conversation payloads before hydration.
+    </text>
+  </g>
+
+  <g transform="translate(400 128)">
+    <rect width="280" height="128" rx="20" fill="#ffffff" stroke="#cbd5e1" />
+    <rect x="18" y="18" width="64" height="32" rx="16" fill="#dbeafe" />
+    <text x="50" y="39" text-anchor="middle" fill="#1d4ed8" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="700">2</text>
+    <text x="18" y="74" fill="#0f172a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Turn virtualization</text>
+    <text x="18" y="102" fill="#475569" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">
+      Swaps far off-screen turns for lightweight restoreable placeholders.
+    </text>
+  </g>
+
+  <g transform="translate(740 128)">
+    <rect width="280" height="128" rx="20" fill="#ffffff" stroke="#cbd5e1" />
+    <rect x="18" y="18" width="64" height="32" rx="16" fill="#ede9fe" />
+    <text x="50" y="39" text-anchor="middle" fill="#6d28d9" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="700">3</text>
+    <text x="18" y="74" fill="#0f172a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="700">Heavy block defer</text>
+    <text x="18" y="102" fill="#475569" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">
+      Defers large code blocks and tables until they matter again.
+    </text>
+  </g>
+
+  <path d="M340 192 H396" fill="none" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" />
+  <path d="M680 192 H736" fill="none" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" />
+</svg>

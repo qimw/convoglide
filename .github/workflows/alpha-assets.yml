@@ -22,6 +22,9 @@ jobs:
       - name: Build alpha assets
         run: npm run package:alpha
 
+      - name: Verify alpha assets
+        run: npm run verify:package
+
       - name: Upload alpha assets
         uses: actions/upload-artifact@v4
         with:

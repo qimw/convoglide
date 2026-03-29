@@ -24,8 +24,14 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Validate docs
+        run: npm run check:docs
+
       - name: Build alpha assets
         run: npm run package:alpha
+
+      - name: Verify alpha assets
+        run: npm run verify:package
 
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2

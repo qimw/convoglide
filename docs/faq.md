@@ -19,7 +19,7 @@ ConvoGlide handles them with separate strategies on purpose.
 
 ## Why is ChatGPT the only officially supported target right now?
 
-The current alpha is intentionally ChatGPT-first so the runtime, docs, benchmark method, and install flow can become stable before the project expands to Gemini or Claude.
+The current alpha is intentionally ChatGPT-first so the runtime, docs, benchmark method, install flow, and release process can become stable together before the project widens its scope.
 
 ## Is the browser extension packaged for the store already?
 

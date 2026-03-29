@@ -24,3 +24,5 @@
 - Replaced the public runtime API with `window.ConvoGlide`
 - Added the first post-load virtualization MVP to the shared runtime
 - Added heavy block lazy activation for large off-screen code blocks and tables
+- Added click and keyboard restore for virtualized turns and deferred heavy blocks
+- Added release, store readiness, and docs validation support for the public alpha

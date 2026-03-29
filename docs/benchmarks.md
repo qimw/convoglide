@@ -78,6 +78,17 @@ The tradeoff is similar to Iteration 2:
 - DOM pressure drops faster than heap pressure
 - restore-friendly snapshots are still part of the design
 
+## Latest rerun check
+
+A follow-up rerun on `2026-03-29` after the restore-interaction changes kept the same steady-state shape as the earlier public alpha sample:
+
+- steady DOM remained at `3473`
+- max virtualized turns remained at `33`
+- heavy placeholders remained at `13`
+- steady heap moved from about `101 MB` to about `103 MB`
+
+That rerun suggests the restore UX work did not regress steady DOM behavior on the current benchmark thread, even though heap still has the same restore-snapshot tradeoff.
+
 ## Measurement method
 
 Current measurements rely on the Chrome remote-debugging scripts in [`scripts/`](../scripts):

@@ -26,14 +26,10 @@
 - [x] Simpler one-click userscript distribution
 - [x] Packaged extension zip build script
 - [x] Tagged GitHub release asset workflow
+- [x] Release checklist doc
+- [x] Browser store readiness checklist
 - [ ] Packaged extension zip in releases
 - [ ] Browser store readiness review
-
-## Multi-app direction
-
-- [ ] Shared adapter interface
-- [ ] Gemini Web prototype
-- [ ] Claude Web research
 
 ## Documentation work
 
@@ -43,4 +39,5 @@
 - [x] Benchmarks docs
 - [x] Architecture docs
 - [x] FAQ docs
+- [x] Public runtime flow diagram
 - [ ] Additional localized docs

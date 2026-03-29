@@ -4,14 +4,14 @@
 
 **让超长 AI 对话重新变顺。**
 
-ConvoGlide 是一个实验性开源项目，目标是减少 AI 网页长对话的卡顿。当前公开 alpha 版本优先支持 **ChatGPT Web**，后续会把架构逐步扩展到 **Gemini**、**Claude** 等长线程聊天产品。
+ConvoGlide 是一个实验性开源项目，目标是减少 AI 网页长对话的卡顿。当前公开 alpha 版本刻意只先支持 **ChatGPT Web**，先把运行时、benchmark、安装路径和发布流程一起做稳。
 
 `Experimental` `ChatGPT-first` `Local-only` `MIT`
 
 ## 快速开始
 
 - Userscript 一键安装： [raw 安装链接](https://raw.githubusercontent.com/qimw/convoglide/main/userscript/convoglide.user.js) 或见 [docs/install.md#userscript](docs/install.md#userscript)
-- 浏览器扩展安装：加载 [`extension/`](extension) 或见 [docs/install.md#browser-extension](docs/install.md#browser-extension)
+- 浏览器扩展安装：下载最新 [GitHub release assets](https://github.com/qimw/convoglide/releases) 或直接加载 [`extension/`](extension)；细节见 [docs/install.md#browser-extension](docs/install.md#browser-extension)
 - 开发者本地调试：见 [docs/install.md#developer-setup](docs/install.md#developer-setup)
 
 ## 它解决什么问题
@@ -22,6 +22,8 @@ ConvoGlide 主要针对两类性能问题：
   - 超长会话在页面真正可用前，就已经让浏览器先吞下一份很大的 conversation payload
 - **打开后越来越卡**
   - 会话打开后，滚动、输入、交互会随着历史内容过多而变卡
+
+![ConvoGlide runtime flow](docs/assets/runtime-flow.svg)
 
 ## 效果摘要
 
@@ -50,10 +52,14 @@ ConvoGlide 主要针对两类性能问题：
 - [x] 本地自动化 benchmark lane
 - [x] extension zip 打包脚本
 - [x] 面向大代码块和表格的 heavy block lazy activation MVP
+- [x] 支持点击和键盘恢复虚拟化 turn / heavy block
+- [x] release checklist 文档
+- [x] 浏览器商店准备度 checklist
+- [x] 文档一致性校验
 - [ ] 加载后虚拟化调优
 - [ ] 图片、媒体和内存恢复路径的进一步调优
-- [ ] Gemini 适配原型
-- [ ] Claude 调研
+- [ ] 首个真实 tagged alpha release 验证
+- [ ] 更多安装和 benchmark 视觉材料
 
 展开版路线图见 [docs/roadmap.md](docs/roadmap.md)
 
@@ -87,6 +93,8 @@ ConvoGlide 现在还会对仍处于活跃 turn 中、但离视口较远的大型
   - build、benchmark、probe 工具
 - `docs/`
   - 安装、benchmark、架构、路线图、FAQ
+- `docs/assets/`
+  - README 和公开文档用的轻量示意图
 
 ## 文档
 
@@ -95,6 +103,8 @@ ConvoGlide 现在还会对仍处于活跃 turn 中、但离视口较远的大型
 - 架构： [docs/architecture.md](docs/architecture.md)
 - 路线图： [docs/roadmap.md](docs/roadmap.md)
 - FAQ： [docs/faq.md](docs/faq.md)
+- 发布： [docs/releasing.md](docs/releasing.md)
+- 商店准备度： [docs/store-readiness.md](docs/store-readiness.md)
 
 ## License
 

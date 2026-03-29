@@ -48,6 +48,13 @@ Reload after changing the limit.
 
 Recommended if you want a more extension-like install flow.
 
+### From the latest GitHub release
+
+1. Open the [GitHub releases page](https://github.com/qimw/convoglide/releases).
+2. Download `convoglide-extension.zip` from the latest alpha release.
+3. Unzip it somewhere local.
+4. Follow the Chrome / Edge side-load steps below with the unzipped folder.
+
 ### Chrome / Edge side-load
 
 1. Open the browser extensions page.
@@ -62,6 +69,13 @@ Recommended if you want a more extension-like install flow.
 - ChatGPT Web only
 - alpha quality
 - store packaging is not part of the current alpha release gate
+
+### Release assets for non-technical users
+
+If you do not want to clone this repository, the alpha release page is the simplest download point:
+
+- `convoglide.user.js`
+- `convoglide-extension.zip`
 
 ## Developer setup
 
@@ -123,6 +137,7 @@ npm run benchmark:compare -- \
 
 ```bash
 npm run package:alpha
+npm run verify:package
 ```
 
 Outputs:

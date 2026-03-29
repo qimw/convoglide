@@ -42,13 +42,14 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Validate docs
+        run: npm run check:docs
+
       - name: Package alpha assets
         run: npm run package:alpha
 
-      - name: Verify packaged files exist
-        run: |
-          test -f dist/convoglide.user.js
-          test -f dist/convoglide-extension.zip
+      - name: Verify packaged assets
+        run: npm run verify:package
 
       - name: Enforce ConvoGlide naming
         run: |

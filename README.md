@@ -6,14 +6,14 @@
 
 **Make long AI chats feel fast again.**
 
-ConvoGlide is an experimental open source project for reducing lag in long AI web conversations. The current public alpha focuses on **ChatGPT Web** first, with the architecture intentionally shaped so we can extend it to **Gemini**, **Claude**, and other long-thread chat apps later.
+ConvoGlide is an experimental open source project for reducing lag in long AI web conversations. The current public alpha is intentionally focused on **ChatGPT Web** so the runtime, benchmark method, install flow, and release process can all become stable together.
 
 `Experimental` `ChatGPT-first` `Local-only` `MIT`
 
 ## Quick Install
 
 - Userscript: [install directly](https://raw.githubusercontent.com/qimw/convoglide/main/userscript/convoglide.user.js) or see [docs/install.md#userscript](docs/install.md#userscript)
-- Browser extension: load [`extension/`](extension) or see [docs/install.md#browser-extension](docs/install.md#browser-extension)
+- Browser extension: download the latest [GitHub release assets](https://github.com/qimw/convoglide/releases) or load [`extension/`](extension); more in [docs/install.md#browser-extension](docs/install.md#browser-extension)
 - Developer setup: see [docs/install.md#developer-setup](docs/install.md#developer-setup)
 
 ## What It Fixes
@@ -24,6 +24,8 @@ ConvoGlide targets two different bottlenecks:
   - very long ChatGPT conversations can ship a huge conversation payload before the page becomes interactive
 - **Slow after load**
   - after the thread opens, scrolling, typing, and interaction can degrade as too much history stays rendered
+
+![ConvoGlide runtime flow](docs/assets/runtime-flow.svg)
 
 ## Performance Snapshot
 
@@ -52,10 +54,14 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 - [x] Local automated benchmark lane
 - [x] Packaged extension zip build script
 - [x] Heavy block lazy activation MVP for large code blocks and tables
+- [x] Click and keyboard restore for virtualized turns and heavy blocks
+- [x] Release checklist doc
+- [x] Browser store readiness checklist
+- [x] Docs consistency validation
 - [ ] Post-load virtualization tuning
 - [ ] Wider lazy activation tuning for images, media, and memory behavior
-- [ ] Gemini adapter prototype
-- [ ] Claude adapter research
+- [ ] First real tagged alpha release verification
+- [ ] More visual installation and benchmark materials
 
 Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 
@@ -91,6 +97,8 @@ Architecture detail: [docs/architecture.md](docs/architecture.md)
   - benchmark, probe, and build helpers
 - `docs/`
   - install, benchmark, architecture, roadmap, and FAQ docs
+- `docs/assets/`
+  - lightweight diagrams for the public docs and README
 
 ## Docs
 
@@ -99,6 +107,8 @@ Architecture detail: [docs/architecture.md](docs/architecture.md)
 - Architecture: [docs/architecture.md](docs/architecture.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
 - FAQ: [docs/faq.md](docs/faq.md)
+- Releasing: [docs/releasing.md](docs/releasing.md)
+- Store readiness: [docs/store-readiness.md](docs/store-readiness.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Security: [SECURITY.md](SECURITY.md)
@@ -128,6 +138,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added heavy block lazy activation for large off-screen code blocks and tables
 - `2026-03-29`: Added benchmark history capture and a report comparison tool for iteration-to-iteration reviews
 - `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
+- `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
 
 ## License
 

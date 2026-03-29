@@ -88,6 +88,14 @@ The current virtualization MVP is optimized first for:
 
 To do that, it currently keeps detached turn and heavy-block snapshots in memory. That means the alpha can already lower DOM cost a lot, but heap reduction may lag behind DOM reduction until a later pass changes how off-screen content is stored and restored.
 
-## Future architecture direction
+## Current scope boundary
 
-Once the ChatGPT alpha is stable, the next step is to extract site-specific logic behind adapters so the same shared runtime ideas can be evaluated on Gemini and then Claude.
+The current alpha is intentionally ChatGPT-only.
+
+That keeps three things aligned while the project is still experimental:
+
+- the runtime assumptions
+- the benchmark thread and measurement method
+- the install and release surface
+
+Future expansion is possible, but it is not part of the current alpha plan.

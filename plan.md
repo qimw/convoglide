@@ -46,7 +46,17 @@
 - runtime 核心逻辑测试覆盖还不够
 - 首个真实 tagged release 还没走完验证
 - release 资产虽然能打包，但“面向普通用户”的发布体验还没完全收口
+- release checklist、store readiness checklist、可视化说明材料还要继续完善
 - 文档虽然够用，但还没到“成熟开源项目首页”的最佳状态
+
+### 刚完成的新进展
+
+- 已补充 runtime 纯逻辑测试
+- 已补充 release checklist 文档
+- 已补充 browser store readiness checklist
+- 已加入公开 runtime flow 示意图
+- 已加入 docs consistency 与 alpha package verification 脚本
+- 已完成一次带恢复交互改动后的 benchmark 回归确认
 
 ## 三、总目标
 
