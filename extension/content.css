@@ -1,0 +1,48 @@
+:root {
+  --milkgpt-badge-bg: rgba(22, 28, 36, 0.92);
+  --milkgpt-badge-fg: #f8fafc;
+  --milkgpt-badge-muted: #cbd5e1;
+  --milkgpt-badge-accent: #7dd3fc;
+}
+
+#milkgpt-badge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  min-width: 180px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--milkgpt-badge-bg);
+  color: var(--milkgpt-badge-fg);
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+#milkgpt-badge strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--milkgpt-badge-accent);
+  font-size: 12px;
+}
+
+#milkgpt-badge .milkgpt-line {
+  display: block;
+  color: var(--milkgpt-badge-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#thread pre,
+#thread table,
+#thread img,
+#thread video,
+#thread canvas,
+#thread svg {
+  content-visibility: auto !important;
+  contain-intrinsic-size: auto 320px !important;
+}

@@ -1,0 +1,14 @@
+{
+  "name": "milkgpt",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Local ChatGPT performance optimizer experiments.",
+  "type": "module",
+  "scripts": {
+    "analyze:body": "node scripts/analyze-conversation-body.mjs",
+    "analyze:followup": "node scripts/analyze-followup-payloads.mjs",
+    "estimate:trim": "node scripts/estimate-trim-impact.mjs",
+    "probe:first-load": "node scripts/probe-userscript-first-load.mjs",
+    "probe:injection": "node scripts/probe-userscript-injection.mjs"
+  }
+}
