@@ -98,6 +98,7 @@ Architecture detail: [docs/architecture.md](docs/architecture.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
 - FAQ: [docs/faq.md](docs/faq.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Security: [SECURITY.md](SECURITY.md)
 - Alpha asset packaging: `npm run package:alpha`
 

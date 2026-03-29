@@ -7,6 +7,7 @@ Thanks for helping with ConvoGlide.
 - Read the current [README](README.md)
 - Check the current [roadmap](docs/roadmap.md)
 - Review the current [benchmarks](docs/benchmarks.md)
+- Read the [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Good contribution targets
 
