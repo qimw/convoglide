@@ -14,6 +14,8 @@ ConvoGlide 是一个实验性开源项目，目标是减少 AI 网页长对话�
 - 浏览器扩展安装：下载最新 [GitHub release assets](https://github.com/qimw/convoglide/releases) 或直接加载 [`extension/`](extension)；细节见 [docs/install.md#browser-extension](docs/install.md#browser-extension)
 - 开发者本地调试：见 [docs/install.md#developer-setup](docs/install.md#developer-setup)
 
+![ConvoGlide install paths](docs/assets/install-paths.svg)
+
 ## 它解决什么问题
 
 ConvoGlide 主要针对两类性能问题：
@@ -69,7 +71,7 @@ ConvoGlide 主要针对两类性能问题：
 - [ ] 加载后虚拟化调优
 - [ ] 图片、媒体和内存恢复路径的进一步调优
 - [x] 首个真实 tagged alpha release 验证
-- [ ] 更多安装和 benchmark 视觉材料
+- [x] 更多安装和 benchmark 视觉材料
 
 展开版路线图见 [docs/roadmap.md](docs/roadmap.md)
 

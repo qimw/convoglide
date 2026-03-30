@@ -16,6 +16,8 @@ ConvoGlide is an experimental open source project for reducing lag in long AI we
 - Browser extension: download the latest [GitHub release assets](https://github.com/qimw/convoglide/releases) or load [`extension/`](extension); more in [docs/install.md#browser-extension](docs/install.md#browser-extension)
 - Developer setup: see [docs/install.md#developer-setup](docs/install.md#developer-setup)
 
+![ConvoGlide install paths](docs/assets/install-paths.svg)
+
 ## What It Fixes
 
 ConvoGlide targets two different bottlenecks:
@@ -71,7 +73,7 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 - [ ] Post-load virtualization tuning
 - [ ] Wider lazy activation tuning for images, media, and memory behavior
 - [x] First real tagged alpha release verification
-- [ ] More visual installation and benchmark materials
+- [x] More visual installation and benchmark materials
 
 Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 

@@ -67,6 +67,7 @@
 - 已确认当前最稳的公开结论是：稳定性和滚动顺滑度已经明显提升，但总加载毫秒数还需要继续调优
 - 已补充用户视角可视化素材，README 里现在可以直接展示 repeated user-facing lane 结果
 - 已完成首个真实 tagged alpha release 验证，`v0.1.0-alpha.1` 的 userscript 和 extension zip 下载都正常
+- 已补充安装路径可视化素材，并完成 README 中“视觉材料”这一项 TODO
 
 ## 三、总目标
 

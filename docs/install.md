@@ -7,6 +7,8 @@ ConvoGlide currently ships two alpha install paths:
 - **Browser extension**
   - better fit if you prefer a side-loaded extension package
 
+![ConvoGlide install paths](assets/install-paths.svg)
+
 ## Userscript
 
 Recommended for most non-technical users.
