@@ -143,6 +143,46 @@ function convoglideIsDocumentHidden(doc = document) {
   return doc?.visibilityState === "hidden";
 }
 
+function convoglideIsScrollableElement(element, doc = document) {
+  if (!element) {
+    return false;
+  }
+  const distance = Math.max(0, (element.scrollHeight || 0) - (element.clientHeight || 0));
+  if (distance <= 32) {
+    return false;
+  }
+  if (element === doc.scrollingElement || element === doc.documentElement || element === doc.body) {
+    return true;
+  }
+  const style = getComputedStyle(element);
+  const overflowY = style.overflowY || style.overflow || "";
+  return /(auto|scroll|overlay)/.test(overflowY);
+}
+
+function convoglideFindScrollRoot(seed, doc = document) {
+  const candidates = [doc.scrollingElement, doc.documentElement, doc.body].filter(Boolean);
+  let cursor = seed;
+  while (cursor && cursor !== doc.documentElement) {
+    if (convoglideIsScrollableElement(cursor, doc)) {
+      candidates.push(cursor);
+    }
+    cursor = cursor.parentElement;
+  }
+
+  let best = candidates[0] || doc.documentElement || doc.body;
+  let bestDistance = best ? Math.max(0, best.scrollHeight - best.clientHeight) : 0;
+
+  for (const candidate of candidates) {
+    const distance = Math.max(0, candidate.scrollHeight - candidate.clientHeight);
+    if (distance > bestDistance) {
+      best = candidate;
+      bestDistance = distance;
+    }
+  }
+
+  return best;
+}
+
 function installConvoGlideChatGPTRuntime(options = {}) {
   const ROOT_ID = CONVOGLIDE_ROOT_ID;
   const CONVERSATION_RESPONSE_RE = CONVOGLIDE_CONVERSATION_RESPONSE_RE;
@@ -301,6 +341,8 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     let threadObserver = null;
     let discoveryObserver = null;
     let restoreBoundRoot = null;
+    let scrollTarget = null;
+    let scrollTimer = null;
     let pauseUntil = 0;
     let lastSummary = "";
 
@@ -416,11 +458,48 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       }
     }
 
+    function scheduleFromScroll() {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        scrollTimer = null;
+        schedule();
+      }, 120);
+    }
+
+    function bindScrollTarget(root = threadRoot) {
+      if (!root?.isConnected) {
+        return;
+      }
+
+      const nextElement = convoglideFindScrollRoot(root);
+      const nextEventTarget =
+        nextElement === document.scrollingElement || nextElement === document.documentElement || nextElement === document.body
+          ? window
+          : nextElement;
+
+      if (scrollTarget?.eventTarget === nextEventTarget && scrollTarget?.element === nextElement) {
+        return;
+      }
+
+      if (scrollTarget?.eventTarget) {
+        scrollTarget.eventTarget.removeEventListener("scroll", scheduleFromScroll);
+      }
+
+      scrollTarget = {
+        element: nextElement,
+        eventTarget: nextEventTarget,
+      };
+
+      scrollTarget.eventTarget?.addEventListener("scroll", scheduleFromScroll, { passive: true });
+    }
+
     function run() {
       if (!threadRoot || !threadRoot.isConnected) {
         attach(findThreadRoot());
         return;
       }
+
+      bindScrollTarget(threadRoot);
 
       if (convoglideIsDocumentHidden()) {
         return;
@@ -482,8 +561,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       }
 
       threadRoot = root;
+      bindScrollTarget(root);
       threadObserver?.disconnect();
       threadObserver = new MutationObserver(() => {
+        bindScrollTarget(threadRoot);
         schedule();
       });
       threadObserver.observe(threadRoot, {
@@ -565,7 +646,6 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       });
     }
 
-    window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("load", schedule, { once: true });
     document.addEventListener("visibilitychange", () => {
@@ -604,6 +684,8 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     let threadObserver = null;
     let discoveryObserver = null;
     let restoreBoundRoot = null;
+    let scrollTarget = null;
+    let scrollTimer = null;
     let pauseUntil = 0;
     let lastSummary = "";
     const heavyClassificationCache = new WeakMap();
@@ -753,11 +835,48 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       }
     }
 
+    function scheduleFromScroll() {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        scrollTimer = null;
+        schedule();
+      }, 120);
+    }
+
+    function bindScrollTarget(root = threadRoot) {
+      if (!root?.isConnected) {
+        return;
+      }
+
+      const nextElement = convoglideFindScrollRoot(root);
+      const nextEventTarget =
+        nextElement === document.scrollingElement || nextElement === document.documentElement || nextElement === document.body
+          ? window
+          : nextElement;
+
+      if (scrollTarget?.eventTarget === nextEventTarget && scrollTarget?.element === nextElement) {
+        return;
+      }
+
+      if (scrollTarget?.eventTarget) {
+        scrollTarget.eventTarget.removeEventListener("scroll", scheduleFromScroll);
+      }
+
+      scrollTarget = {
+        element: nextElement,
+        eventTarget: nextEventTarget,
+      };
+
+      scrollTarget.eventTarget?.addEventListener("scroll", scheduleFromScroll, { passive: true });
+    }
+
     function run() {
       if (!threadRoot || !threadRoot.isConnected) {
         attach(findThreadRoot());
         return;
       }
+
+      bindScrollTarget(threadRoot);
 
       if (convoglideIsDocumentHidden()) {
         return;
@@ -823,8 +942,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       }
 
       threadRoot = root;
+      bindScrollTarget(root);
       threadObserver?.disconnect();
       threadObserver = new MutationObserver(() => {
+        bindScrollTarget(threadRoot);
         schedule();
       });
       threadObserver.observe(threadRoot, {
@@ -900,7 +1021,6 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       });
     }
 
-    window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("load", schedule, { once: true });
     document.addEventListener("visibilitychange", () => {
