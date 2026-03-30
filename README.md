@@ -39,6 +39,8 @@ Plain-language check on that same thread:
 - Raw ChatGPT also failed the synthetic long-scroll probe in `2/2` runs, while ConvoGlide reported `smooth` scrolling in `2/2` runs
 - Wall-clock title timing still moves around too much to claim a repeatable first-visible speed win yet, so the current public alpha should be understood as a stability and smoothness win first
 
+![ConvoGlide user-facing lane snapshot](docs/assets/user-facing-lane.svg)
+
 | Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 0 | Baseline | ~5.0 MB | ~1820 | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |

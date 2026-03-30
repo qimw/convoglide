@@ -33,3 +33,4 @@
 - Added first-title timing, main-response timing, and render-gap summaries to benchmark comparisons
 - Added a repeated user-facing lane for median plain-vs-optimized checks
 - Clarified the public alpha claim: repeatable wins are currently stability and scroll smoothness first, with wall-clock first-visible speed still under tuning
+- Added a public SVG snapshot for the repeated user-facing lane

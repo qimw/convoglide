@@ -37,6 +37,8 @@ ConvoGlide 主要针对两类性能问题：
 - 原始页面在 `2/2` 轮里都没能完成一次合成长滚动探测，而 ConvoGlide 在 `2/2` 轮里都测出了 `smooth`
 - 目前“总加载毫秒数稳定变短”还不能下公开结论，所以这版 alpha 更准确的说法是：它先明显改善了稳定性和滚动顺滑度
 
+![ConvoGlide user-facing lane snapshot](docs/assets/user-facing-lane.svg)
+
 | Iteration | 策略 | Payload | Mapping nodes | 稳态 DOM | Heap | 备注 |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 0 | 基线 | ~5.0 MB | ~1820 | 难以稳定探测 | n/a | 真实长线程在完全加载后会很重 |
