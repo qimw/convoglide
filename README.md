@@ -35,7 +35,7 @@ Plain-language check on that same thread:
 
 - Raw ChatGPT first showed the real conversation title at about `12,422 ms`, then the page started timing out under probing by about `18,452 ms`
 - In a clean rerun with ConvoGlide `keep 20`, the main conversation response arrived at about `10,746 ms` and the real title appeared at about `14,003 ms`
-- That means the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`, and the optimized page stayed probeable through `50,000 ms`
+- Wall-clock timing still moves around from rerun to rerun, but the optimized page stayed probeable through `50,000 ms` instead of timing out soon after the title appeared
 - In the same clean reruns, plain ChatGPT could not finish the synthetic long-scroll probe before timing out, while ConvoGlide reported `smooth` scrolling at both `keep 20` and `keep 80`
 
 | Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
@@ -150,7 +150,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
 - `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
 - `2026-03-29`: Tuned post-load runtime scanning and hardened the benchmark lane so empty captures retry instead of being saved as false-success reports
-- `2026-03-30`: Switched the public default keep limit to `20` after the latest clean rerun showed a shorter post-response render gap and a much more stable long-thread page through `50 s`
+- `2026-03-30`: Switched the public default keep limit to `20` to bias the alpha toward the smallest payload and the most stable first-open behavior on very long threads
 
 ## License
 

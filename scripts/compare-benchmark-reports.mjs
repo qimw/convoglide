@@ -9,6 +9,20 @@ function numberOrNull(value) {
   return Number.isFinite(value) ? value : null;
 }
 
+function pickMainConversationEvent(report) {
+  const events = Array.isArray(report?.firstLoad?.networkEvents)
+    ? report.firstLoad.networkEvents
+    : Array.isArray(report?.networkEvents)
+      ? report.networkEvents
+      : [];
+  return (
+    events.find((event) => {
+      const url = String(event?.url || "");
+      return /\/backend-api\/conversation\/[0-9a-f-]+(?:\?|$)/i.test(url);
+    }) || null
+  );
+}
+
 function formatSignedDelta(value, suffix = "") {
   if (!Number.isFinite(value)) {
     return "n/a";
@@ -18,19 +32,29 @@ function formatSignedDelta(value, suffix = "") {
 }
 
 function summarizeReport(report) {
-  const stable = report?.summary?.stableSample || {};
+  const stable = report?.summary?.stableSample || report?.stableSample || {};
+  const firstResolvedTitleSample = report?.summary?.firstResolvedTitleSample || report?.firstResolvedTitleSample || null;
+  const mainConversationEvent = pickMainConversationEvent(report);
+  const titleElapsedMs = numberOrNull(firstResolvedTitleSample?.elapsedMs);
+  const mainResponseElapsedMs = numberOrNull(mainConversationEvent?.elapsedMs);
+  const renderGapMs = numberOrNull((titleElapsedMs ?? NaN) - (mainResponseElapsedMs ?? NaN));
+  const scrollMetrics = report?.summary?.scrollMetrics || report?.scrollMetrics || null;
+  const scrollVerdict = report?.summary?.scrollVerdict || report?.scrollVerdict || "unknown";
   return {
     domNodes: numberOrNull(stable.domNodes),
     heapMB: numberOrNull(stable.heapMB),
     virtualizedTurns: numberOrNull(stable.virtualizedTurns),
     heavyPlaceholders: numberOrNull(stable.heavyPlaceholders),
-    scrollAverageFrameMs: numberOrNull(report?.summary?.scrollMetrics?.averageFrameMs),
-    scrollDistancePx: numberOrNull(report?.summary?.scrollMetrics?.distance),
-    scrollVerdict: report?.summary?.scrollVerdict || "unknown",
+    titleElapsedMs,
+    mainResponseElapsedMs,
+    renderGapMs,
+    scrollAverageFrameMs: numberOrNull(scrollMetrics?.averageFrameMs),
+    scrollDistancePx: numberOrNull(scrollMetrics?.distance),
+    scrollVerdict,
     phase: stable.phase || "n/a",
     label: stable.label || "n/a",
-    url: report?.url || "n/a",
-    keep: report?.keep ?? "n/a",
+    url: report?.url || report?.navigateUrl || "n/a",
+    keep: report?.keep ?? report?.maxMessageNodes ?? "n/a",
   };
 }
 
@@ -49,6 +73,9 @@ const delta = {
   heapMB: numberOrNull((head.heapMB ?? NaN) - (base.heapMB ?? NaN)),
   virtualizedTurns: numberOrNull((head.virtualizedTurns ?? NaN) - (base.virtualizedTurns ?? NaN)),
   heavyPlaceholders: numberOrNull((head.heavyPlaceholders ?? NaN) - (base.heavyPlaceholders ?? NaN)),
+  titleElapsedMs: numberOrNull((head.titleElapsedMs ?? NaN) - (base.titleElapsedMs ?? NaN)),
+  mainResponseElapsedMs: numberOrNull((head.mainResponseElapsedMs ?? NaN) - (base.mainResponseElapsedMs ?? NaN)),
+  renderGapMs: numberOrNull((head.renderGapMs ?? NaN) - (base.renderGapMs ?? NaN)),
   scrollAverageFrameMs: numberOrNull((head.scrollAverageFrameMs ?? NaN) - (base.scrollAverageFrameMs ?? NaN)),
   scrollDistancePx: numberOrNull((head.scrollDistancePx ?? NaN) - (base.scrollDistancePx ?? NaN)),
 };
@@ -71,6 +98,9 @@ comparison.markdown = [
   "",
   "| Metric | Base | Head | Delta |",
   "| --- | ---: | ---: | ---: |",
+  `| First title ms | ${base.titleElapsedMs ?? "n/a"} | ${head.titleElapsedMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.titleElapsedMs)} |`,
+  `| Main response ms | ${base.mainResponseElapsedMs ?? "n/a"} | ${head.mainResponseElapsedMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.mainResponseElapsedMs)} |`,
+  `| Render gap ms | ${base.renderGapMs ?? "n/a"} | ${head.renderGapMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.renderGapMs)} |`,
   `| DOM nodes | ${base.domNodes ?? "n/a"} | ${head.domNodes ?? "n/a"} | ${formatSignedDelta(comparison.delta.domNodes)} |`,
   `| Heap MB | ${base.heapMB ?? "n/a"} | ${head.heapMB ?? "n/a"} | ${formatSignedDelta(comparison.delta.heapMB)} |`,
   `| Virtualized turns | ${base.virtualizedTurns ?? "n/a"} | ${head.virtualizedTurns ?? "n/a"} | ${formatSignedDelta(comparison.delta.virtualizedTurns)} |`,

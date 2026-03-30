@@ -40,7 +40,6 @@ On the same benchmark thread:
 In plain language:
 
 - wall-clock first-visible time still moves around with network timing
-- the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`
 - the optimized page stayed usable instead of quickly becoming a heavy, unstable page
 - the optimized page also completed a 2,700 px synthetic long-scroll pass at about `16.4-16.6 ms` average frame time with zero frames over `33 ms`
 

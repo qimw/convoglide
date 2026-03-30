@@ -75,6 +75,9 @@ npm run benchmark:compare -- \
 
 That produces a JSON summary and a Markdown table showing:
 
+- first title time
+- main conversation response time
+- render gap after the main response
 - DOM delta
 - heap delta
 - virtualized turn delta
