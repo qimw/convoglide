@@ -70,7 +70,7 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 - [x] Docs consistency validation
 - [ ] Post-load virtualization tuning
 - [ ] Wider lazy activation tuning for images, media, and memory behavior
-- [ ] First real tagged alpha release verification
+- [x] First real tagged alpha release verification
 - [ ] More visual installation and benchmark materials
 
 Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
@@ -154,6 +154,7 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
 - `2026-03-29`: Tuned post-load runtime scanning and hardened the benchmark lane so empty captures retry instead of being saved as false-success reports
 - `2026-03-30`: Switched the public default keep limit to `20` to bias the alpha toward the smallest payload and the most stable first-open behavior on very long threads
+- `2026-03-30`: Verified the first real tagged alpha release (`v0.1.0-alpha.1`) and confirmed both release assets download correctly
 
 ## License
 

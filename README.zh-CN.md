@@ -68,7 +68,7 @@ ConvoGlide 主要针对两类性能问题：
 - [x] 文档一致性校验
 - [ ] 加载后虚拟化调优
 - [ ] 图片、媒体和内存恢复路径的进一步调优
-- [ ] 首个真实 tagged alpha release 验证
+- [x] 首个真实 tagged alpha release 验证
 - [ ] 更多安装和 benchmark 视觉材料
 
 展开版路线图见 [docs/roadmap.md](docs/roadmap.md)
