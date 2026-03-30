@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-function createReport(domNodes, heapMB, virtualizedTurns, heavyPlaceholders) {
+function createReport(domNodes, heapMB, virtualizedTurns, heavyPlaceholders, scrollAverageFrameMs = 16.6, scrollDistancePx = -2700, scrollVerdict = "smooth") {
   return {
     url: "https://chatgpt.com/example",
     keep: 80,
@@ -18,6 +18,11 @@ function createReport(domNodes, heapMB, virtualizedTurns, heavyPlaceholders) {
         virtualizedTurns,
         heavyPlaceholders,
       },
+      scrollMetrics: {
+        averageFrameMs: scrollAverageFrameMs,
+        distance: scrollDistancePx,
+      },
+      scrollVerdict,
     },
   };
 }
@@ -43,7 +48,10 @@ test("compare-benchmark-reports computes stable deltas", () => {
     assert.equal(payload.delta.heapMB, -3);
     assert.equal(payload.delta.virtualizedTurns, 0);
     assert.equal(payload.delta.heavyPlaceholders, 13);
+    assert.equal(payload.delta.scrollAverageFrameMs, 0);
+    assert.equal(payload.delta.scrollDistancePx, 0);
     assert.match(payload.markdown, /DOM nodes \| 3811 \| 3471 \| -340/);
+    assert.match(payload.markdown, /Scroll verdict \| smooth \| smooth \| n\/a/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

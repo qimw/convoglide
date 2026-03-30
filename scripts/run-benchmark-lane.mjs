@@ -142,6 +142,8 @@ function summarize(firstLoad, injection, url, keep) {
       maxVirtualizedTurns,
       maxHeavyPlaceholders,
       networkEventCount: Array.isArray(firstLoad.networkEvents) ? firstLoad.networkEvents.length : 0,
+      scrollVerdict: firstLoad.scrollVerdict || "unknown",
+      scrollMetrics: firstLoad.scrollMetrics || null,
     },
   };
 }
@@ -167,6 +169,9 @@ function renderMarkdown(report) {
     `- Stable DOM: \`${stable?.domNodes ?? "n/a"}\``,
     `- Stable heap: \`${stable?.heapMB ?? "n/a"} MB\``,
     `- Stable phase: \`${stable?.phase ?? "n/a"}\``,
+    `- Scroll verdict: \`${report.summary.scrollVerdict || "unknown"}\``,
+    `- Scroll distance: \`${report.summary.scrollMetrics?.distance ?? "n/a"} px\``,
+    `- Scroll average frame: \`${report.summary.scrollMetrics?.averageFrameMs ?? "n/a"} ms\``,
     "",
       "## Samples",
       "",

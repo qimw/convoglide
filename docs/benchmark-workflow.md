@@ -56,11 +56,14 @@ Each saved JSON report also includes:
 - `firstResolvedTitleSample`
 - `stableSample`
 - `firstVirtualizerSample`
+- `scrollVerdict`
+- `scrollMetrics`
 
 Those fields are the easiest way to explain results in plain language, for example:
 
 - when the target conversation title first appeared
 - when the optimized page reached a stable state
+- whether a synthetic long scroll stayed smooth or became janky
 
 ## Compare two saved runs
 
@@ -76,6 +79,9 @@ That produces a JSON summary and a Markdown table showing:
 - heap delta
 - virtualized turn delta
 - heavy placeholder delta
+- scroll verdict
+- scroll distance
+- scroll average frame time
 
 ## How to use the result
 

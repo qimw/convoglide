@@ -71,8 +71,14 @@ function makeScrollExpression() {
       ? window.innerHeight
       : root.clientHeight;
     const maxTop = Math.max(0, root.scrollHeight - viewportHeight);
-    const targetTop = Math.min(maxTop, Math.max(viewportHeight * 4, 2400));
-    if (targetTop <= startTop) {
+    const preferredDistance = Math.max(viewportHeight * 4, 2400);
+    const availableDown = Math.max(0, maxTop - startTop);
+    const availableUp = Math.max(0, startTop);
+    const direction = availableDown >= availableUp ? 1 : -1;
+    const availableDistance = direction > 0 ? availableDown : availableUp;
+    const travelDistance = Math.min(availableDistance, preferredDistance);
+    const targetTop = Math.max(0, Math.min(maxTop, startTop + direction * travelDistance));
+    if (Math.abs(targetTop - startTop) < 200) {
       resolve({
         ok: true,
         distance: 0,
@@ -81,7 +87,11 @@ function makeScrollExpression() {
         framesOver33: 0,
         framesOver50: 0,
         totalFrames: 0,
-        rootTag: root?.tagName || null
+        rootTag: root?.tagName || null,
+        rootClass: String(root?.className || '').slice(0, 120),
+        direction: 'none',
+        startTop: Math.round(startTop),
+        maxTop: Math.round(maxTop),
       });
       return;
     }
@@ -107,7 +117,11 @@ function makeScrollExpression() {
         framesOver33,
         framesOver50,
         totalFrames: usable.length,
-        rootTag: root?.tagName || null
+        rootTag: root?.tagName || null,
+        rootClass: String(root?.className || '').slice(0, 120),
+        direction: direction > 0 ? 'down' : 'up',
+        startTop: Math.round(startTop),
+        maxTop: Math.round(maxTop),
       });
     }
 

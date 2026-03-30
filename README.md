@@ -36,6 +36,7 @@ Plain-language check on that same thread:
 - Raw ChatGPT first showed the real conversation title at about `12,422 ms`, then the page started timing out under probing by about `18,452 ms`
 - In a clean rerun with ConvoGlide `keep 20`, the main conversation response arrived at about `10,746 ms` and the real title appeared at about `14,003 ms`
 - That means the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`, and the optimized page stayed probeable through `50,000 ms`
+- In the same clean reruns, plain ChatGPT could not finish the synthetic long-scroll probe before timing out, while ConvoGlide reported `smooth` scrolling at both `keep 20` and `keep 80`
 
 | Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | --- |

@@ -34,12 +34,15 @@ On the same benchmark thread:
 - that plain page started timing out under probing by about `18,452 ms`
 - in a clean rerun, ConvoGlide with the fast default (`keep 20`) received the main conversation response at about `10,746 ms` and showed the real thread title at about `14,003 ms`
 - that optimized page stayed probeable through `50,000 ms`
+- plain ChatGPT could not complete the synthetic long-scroll probe before timing out
+- ConvoGlide reported `smooth` scrolling in clean reruns at both `keep 20` and `keep 80`
 
 In plain language:
 
 - wall-clock first-visible time still moves around with network timing
 - the browser-side render gap after the main response dropped from about `4,815 ms` to about `3,257 ms`
 - the optimized page stayed usable instead of quickly becoming a heavy, unstable page
+- the optimized page also completed a 2,700 px synthetic long-scroll pass at about `16.4-16.6 ms` average frame time with zero frames over `33 ms`
 
 ## Latest Iteration 2 sample timeline
 
@@ -126,5 +129,11 @@ The benchmark lane writes:
 - `artifacts/benchmarks/history/<timestamp>.md`
 
 Use `npm run benchmark:compare -- <base.json> <head.json>` to compare two saved reports.
+
+The comparison tool now also includes:
+
+- scroll verdict
+- scroll distance
+- scroll average frame time
 
 All headline results shown in the README should be derived from this document.

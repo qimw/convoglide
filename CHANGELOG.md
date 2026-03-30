@@ -29,3 +29,4 @@
 - Added a benchmark workflow guide and stricter benchmark-lane retry/validation behavior
 - Tuned post-load runtime scanning to skip hidden-document work and cache heavy-block classification
 - Switched the public default keep limit from `80` to `20` after the latest clean rerun showed a shorter post-response render gap and much better long-thread stability
+- Added synthetic long-scroll verdicts and frame-time summaries to the probe and benchmark comparison tools

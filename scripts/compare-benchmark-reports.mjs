@@ -24,6 +24,9 @@ function summarizeReport(report) {
     heapMB: numberOrNull(stable.heapMB),
     virtualizedTurns: numberOrNull(stable.virtualizedTurns),
     heavyPlaceholders: numberOrNull(stable.heavyPlaceholders),
+    scrollAverageFrameMs: numberOrNull(report?.summary?.scrollMetrics?.averageFrameMs),
+    scrollDistancePx: numberOrNull(report?.summary?.scrollMetrics?.distance),
+    scrollVerdict: report?.summary?.scrollVerdict || "unknown",
     phase: stable.phase || "n/a",
     label: stable.label || "n/a",
     url: report?.url || "n/a",
@@ -46,6 +49,8 @@ const delta = {
   heapMB: numberOrNull((head.heapMB ?? NaN) - (base.heapMB ?? NaN)),
   virtualizedTurns: numberOrNull((head.virtualizedTurns ?? NaN) - (base.virtualizedTurns ?? NaN)),
   heavyPlaceholders: numberOrNull((head.heavyPlaceholders ?? NaN) - (base.heavyPlaceholders ?? NaN)),
+  scrollAverageFrameMs: numberOrNull((head.scrollAverageFrameMs ?? NaN) - (base.scrollAverageFrameMs ?? NaN)),
+  scrollDistancePx: numberOrNull((head.scrollDistancePx ?? NaN) - (base.scrollDistancePx ?? NaN)),
 };
 
 const comparison = {
@@ -70,6 +75,9 @@ comparison.markdown = [
   `| Heap MB | ${base.heapMB ?? "n/a"} | ${head.heapMB ?? "n/a"} | ${formatSignedDelta(comparison.delta.heapMB)} |`,
   `| Virtualized turns | ${base.virtualizedTurns ?? "n/a"} | ${head.virtualizedTurns ?? "n/a"} | ${formatSignedDelta(comparison.delta.virtualizedTurns)} |`,
   `| Heavy placeholders | ${base.heavyPlaceholders ?? "n/a"} | ${head.heavyPlaceholders ?? "n/a"} | ${formatSignedDelta(comparison.delta.heavyPlaceholders)} |`,
+  `| Scroll average frame ms | ${base.scrollAverageFrameMs ?? "n/a"} | ${head.scrollAverageFrameMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.scrollAverageFrameMs)} |`,
+  `| Scroll distance px | ${base.scrollDistancePx ?? "n/a"} | ${head.scrollDistancePx ?? "n/a"} | ${formatSignedDelta(comparison.delta.scrollDistancePx)} |`,
+  `| Scroll verdict | ${base.scrollVerdict} | ${head.scrollVerdict} | n/a |`,
   "",
 ].join("\n");
 
