@@ -1,8 +1,21 @@
 (() => {
   const BADGE_ID = "convoglide-badge";
   const DEBUG_EVENT = "__convoglide_debug";
+  const DEBUG_BADGE_STORAGE_KEY = "convoglide:show-badge";
+
+  function debugBadgeEnabled() {
+    try {
+      return localStorage.getItem(DEBUG_BADGE_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
 
   function ensureBadge() {
+    if (!debugBadgeEnabled()) {
+      return null;
+    }
+
     if (!document.body) {
       return null;
     }
@@ -24,7 +37,19 @@
     return badge;
   }
 
+  function updateState(detail = {}) {
+    try {
+      document.documentElement.dataset.convoglidePhase = detail.phase || detail.event || "content-script";
+      document.documentElement.dataset.convoglideSummary = (detail.summary || "").slice(0, 120);
+    } catch {}
+  }
+
   function updateBadge(detail = {}) {
+    updateState(detail);
+    if (!debugBadgeEnabled()) {
+      return;
+    }
+
     const badge = ensureBadge();
     if (!badge) {
       return;
@@ -43,28 +68,15 @@
     if (urlEl) urlEl.textContent = `url: ${url}`;
   }
 
-  function writeState(detail = {}) {
-    try {
-      document.documentElement.dataset.convoglidePhase = detail.phase || detail.event || "content-script";
-      document.documentElement.dataset.convoglideSummary = (detail.summary || "").slice(0, 120);
-    } catch {}
-    updateBadge(detail);
-  }
-
   function boot() {
-    const badge = ensureBadge();
-    if (!badge) {
-      return false;
-    }
-
-    writeState({
+    updateBadge({
       phase: "content-script",
-      summary: "badge-mounted",
+      summary: debugBadgeEnabled() ? "badge-mounted" : "state-only",
       url: location.pathname,
     });
 
     window.addEventListener(DEBUG_EVENT, (event) => {
-      writeState(event.detail || {});
+      updateBadge(event.detail || {});
     });
 
     return true;

@@ -44,7 +44,6 @@
 - Optimization 3 还没调优到满意状态
 - heap 表现还不够“漂亮”
 - runtime 核心逻辑测试覆盖还不够
-- 首个真实 tagged release 还没走完验证
 - release 资产虽然能打包，但“面向普通用户”的发布体验还没完全收口
 - release checklist、store readiness checklist、可视化说明材料还要继续完善
 - 文档虽然够用，但还没到“成熟开源项目首页”的最佳状态
@@ -60,11 +59,12 @@
 - 已补充 benchmark workflow 文档
 - 已把 benchmark lane 加固为“空样本自动重试，空成功不落盘”
 - 已做一轮 post-load 扫描调优，并完成回归 benchmark
-- 已确认新的用户默认档位切到 `20` 更合适：它让 alpha 默认偏向更小的 payload 和更稳的首开行为
-- 已补上合成长滚动测量：原始页面在滚动探测前就会失稳，优化后的 `20` 档和 `80` 档都能跑出 `smooth`
+- 已确认新的用户默认档位切到 `8` 更合适：它把当前 benchmark 对话压进了 `15 s` 以内，同时保住了长滚动 `smooth`
+- 已补上合成长滚动测量：原始页面在滚动探测前就会失稳，优化后的 `8` 档和 `80` 档都能跑出 `smooth`
 - 已补上用户视角对比指标：会话标题出现时间、主响应返回时间、主响应后的浏览器处理耗时
 - 已新增重复 user-facing lane，可以直接算 plain vs optimized 的中位数结果
-- 已确认当前最稳的公开结论是：稳定性和滚动顺滑度已经明显提升，但总加载毫秒数还需要继续调优
+- 已让默认快开档位在当前 `n=2` 预实验中达到 `14.35 s` 的首次可见时间中位数，略快于原始页面的 `14.54 s`
+- 已把默认 on-page badge 改成可选调试项，并把 post-load fallback 延后到 `30 s`，避免它们抢首屏路径
 - 已补充用户视角可视化素材，README 里现在可以直接展示 repeated user-facing lane 结果
 - 已完成首个真实 tagged alpha release 验证，`v0.1.0-alpha.1` 的 userscript 和 extension zip 下载都正常
 - 已补充安装路径可视化素材，并完成 README 中“视觉材料”这一项 TODO
@@ -77,6 +77,17 @@
 2. 让性能结论更可验证、更可对比
 3. 让不懂代码的用户也能更顺手地安装和使用
 4. 让仓库在结构、文档、发布流程上更像长期维护的开源项目
+
+### 当前明确的量化目标
+
+为了避免“优化了很多”这种模糊说法，这轮后续工作按下面这些目标推进：
+
+1. 公开主 benchmark 从 `n=2` 预实验升级到 `n=5`
+2. 首次可见时间至少做到 **不慢于原始页面中位数**
+3. 把当前 benchmark 对话上已经实现的 **`<= 15 s`** 预实验结果稳住，并延续到正式 `n=5`
+4. 标准化 **4 屏长滚动测试** 做到 **`5/5` 都是 `smooth`**
+5. 默认档位的稳态 DOM 压到 **`<= 3.0k`**
+6. 默认档位的稳态 heap 压到 **`<= 90 MB`**
 
 ## 四、工作流划分
 
@@ -232,19 +243,16 @@
 当前状态：
 
 - 已有 tag 触发的 GitHub Release asset workflow
-- 但还没真正走过一遍完整发布
+- 已经完成过一遍真实 alpha tag 发布验证
 
 接下来要做：
 
-- 打一个真实 alpha tag
-- 确认 release note 自动生成正常
-- 确认 `convoglide.user.js` 正常上传
-- 确认 `convoglide-extension.zip` 正常上传
-- 补 release checklist
+- 持续确保 release note、userscript、extension zip 在后续版本里都正常产出
+- 保持 release checklist 与当前流程同步
 
 验收标准：
 
-- 成功完成 1 次真实 tagged alpha release
+- 后续 tagged alpha release 仍然稳定可复现
 
 ### 7.2 面向普通用户的分发体验优化
 
@@ -293,7 +301,7 @@
 
 接下来要做：
 
-- 首个 tagged release 完成后补 release / install 引导
+- 继续优化 release / install 引导
 - 增加 1 到 2 个视觉材料
   - 截图
   - 简短 GIF

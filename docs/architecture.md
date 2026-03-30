@@ -67,7 +67,7 @@ It is wrapped by:
 - a userscript runtime
 - a browser extension page-hook runtime
 
-The extension also uses a content script for the badge UI.
+The extension also uses a content script for debug-state publishing and an optional on-page badge.
 
 ## Why the split matters
 

@@ -6,11 +6,13 @@ import { getTargets } from "./cdp.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..");
+const DEFAULT_KEEP = 8;
+const MIN_KEEP = 4;
 
 function parseArgs(argv) {
   const args = {
     url: "",
-    keep: 20,
+    keep: DEFAULT_KEEP,
     outDir: resolve(repoRoot, "artifacts/benchmarks"),
     launch: true,
   };
@@ -23,7 +25,7 @@ function parseArgs(argv) {
       continue;
     }
     if (arg === "--keep") {
-      args.keep = Math.max(20, Number(argv[index + 1]) || 20);
+      args.keep = Math.max(MIN_KEEP, Number(argv[index + 1]) || DEFAULT_KEEP);
       index += 1;
       continue;
     }
@@ -38,7 +40,7 @@ function parseArgs(argv) {
   }
 
   if (!args.url) {
-    console.error("Usage: node scripts/run-benchmark-lane.mjs <chat-url> [--keep 20] [--out-dir artifacts/benchmarks] [--no-launch]");
+    console.error(`Usage: node scripts/run-benchmark-lane.mjs <chat-url> [--keep ${DEFAULT_KEEP}] [--out-dir artifacts/benchmarks] [--no-launch]`);
     process.exit(1);
   }
 

@@ -36,3 +36,5 @@
 - Added a public SVG snapshot for the repeated user-facing lane
 - Verified the first real tagged alpha release (`v0.1.0-alpha.1`) and confirmed both public assets download correctly
 - Added a public install-path SVG and closed the visual-materials TODO
+- Switched the public fast-default keep limit from `20` to `8`, delayed post-load fallback work to `30 s`, and made the on-page debug badge opt-in
+- Reached a `14.35 s` median first-visible time on the current benchmark thread in the latest `n=2` pilot while preserving `smooth` long-scroll results in `2/2` runs

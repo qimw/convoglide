@@ -1,6 +1,6 @@
 <svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">ConvoGlide user-facing lane snapshot</title>
-  <desc id="desc">Repeated benchmark summary comparing plain ChatGPT and ConvoGlide on a very long conversation.</desc>
+  <desc id="desc">Repeated benchmark summary comparing raw ChatGPT and ConvoGlide keep 8 on a very long conversation.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F4F7FB"/>
@@ -25,63 +25,63 @@
     ConvoGlide User-facing Lane
   </text>
   <text x="76" y="132" fill="#456175" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">
-    Latest repeated check on the current long-thread benchmark: stability and scroll smoothness are already repeatable.
+    Current 2-run pilot benchmark on the long-thread reference: the fast-default profile now edges raw ChatGPT on first-visible time and stays smoother after load.
   </text>
 
   <rect x="76" y="184" width="492" height="404" rx="28" fill="url(#cardA)" filter="url(#shadow)"/>
   <rect x="632" y="184" width="492" height="404" rx="28" fill="url(#cardB)" filter="url(#shadow)"/>
 
   <text x="112" y="244" fill="#6C8191" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="600">
-    Plain ChatGPT
+    Raw ChatGPT
   </text>
   <text x="668" y="244" fill="#18794E" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="700">
-    ConvoGlide keep 20
+    ConvoGlide keep 8
   </text>
 
   <text x="112" y="324" fill="#11324A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800">
-    0/2
+    14.54 s
   </text>
   <text x="112" y="362" fill="#5B7283" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">
-    stable-through-50s runs
+    median first-visible time
   </text>
 
   <text x="668" y="324" fill="#0F6B43" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="800">
-    2/2
+    14.35 s
   </text>
   <text x="668" y="362" fill="#4A6A59" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">
-    stable-through-50s runs
+    median first-visible time
   </text>
 
   <text x="112" y="442" fill="#7B5A16" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="48" font-weight="800">
-    unknown
+    not evaluable
   </text>
   <text x="112" y="480" fill="#5B7283" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">
-    long-scroll verdict in 2/2 runs
+    4-screen long-scroll in 2/2 pilot runs
   </text>
 
   <text x="668" y="442" fill="#0F6B43" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="48" font-weight="800">
     smooth
   </text>
   <text x="668" y="480" fill="#4A6A59" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">
-    long-scroll verdict in 2/2 runs
+    4-screen long-scroll in 2/2 pilot runs
   </text>
 
   <text x="112" y="548" fill="#11324A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="26" font-weight="700">
-    Median first title: 17.0 s
+    Title appears, but the page still degrades
   </text>
   <text x="112" y="584" fill="#5B7283" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20">
-    Fast-looking runs still fluctuate and the page stops cooperating early.
+    Raw ChatGPT is close on first-visible time in this pilot, but it still fails the long-scroll evaluation cleanly.
   </text>
 
   <text x="668" y="548" fill="#11324A" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="26" font-weight="700">
-    Median first title: 22.3 s
+    First pilot below 15 seconds
   </text>
   <text x="668" y="584" fill="#4A6A59" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20">
-    Current repeatable win: the thread stays alive and scrolling remains smooth.
+    The fast-default profile is slightly faster on first-visible time and clearly more cooperative once the thread opens.
   </text>
 
   <rect x="76" y="626" width="1048" height="48" rx="24" fill="#11324A" opacity="0.06"/>
   <text x="100" y="658" fill="#27455B" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18">
-    The current alpha clearly improves stability and scroll smoothness. Repeatable end-to-end first-visible speed gains are still under tuning.
+    Public takeaway: the current keep 8 pilot reaches 14.35 s and keeps long-scroll smooth, but the final headline claim still waits for the 5-run refresh.
   </text>
 </svg>

@@ -7,12 +7,14 @@ import { getTargets } from "./cdp.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..");
 const CONVERSATION_RESPONSE_RE = /\/backend-api\/conversation\/[0-9a-f-]+(?:\?|$)/i;
+const DEFAULT_KEEP = 8;
+const MIN_KEEP = 4;
 
 function parseArgs(argv) {
   const args = {
     url: "",
     iterations: 2,
-    keep: 20,
+    keep: DEFAULT_KEEP,
     outDir: resolve(repoRoot, "artifacts/user-facing"),
     launch: true,
   };
@@ -30,7 +32,7 @@ function parseArgs(argv) {
       continue;
     }
     if (arg === "--keep") {
-      args.keep = Math.max(20, Number(argv[index + 1]) || 20);
+      args.keep = Math.max(MIN_KEEP, Number(argv[index + 1]) || DEFAULT_KEEP);
       index += 1;
       continue;
     }
@@ -46,7 +48,7 @@ function parseArgs(argv) {
 
   if (!args.url) {
     console.error(
-      "Usage: node scripts/run-user-facing-lane.mjs <chat-url> [--iterations 2] [--keep 20] [--out-dir artifacts/user-facing] [--no-launch]",
+      `Usage: node scripts/run-user-facing-lane.mjs <chat-url> [--iterations 2] [--keep ${DEFAULT_KEEP}] [--out-dir artifacts/user-facing] [--no-launch]`,
     );
     process.exit(1);
   }

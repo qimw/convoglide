@@ -6,15 +6,14 @@ Most important numbers from the target conversation:
 - Original conversation response size: about 5.0 MB
 - Mapping nodes: about 1820
 - Main branch nodes: about 1749
-- `conversation/init` is tiny at about 654 bytes
-- `conversation/<id>/textdocs` is effectively empty at `[]`
 - Keeping the latest 120 message nodes cuts the payload by about 92 percent
 - Keeping the latest 80 message nodes cuts the payload by about 94 percent
 - Keeping the latest 20 message nodes cuts the payload by about 97.8 percent
+- Keeping the latest 8 message nodes cuts the payload by about 98.6 percent
+- Keeping the latest 4 message nodes cuts the payload by about 98.8 percent
 
-Observed runtime behavior on the target conversation:
-- Without interception, the real conversation title appears at about 12.4 seconds and the page starts timing out under probing around 18.5 seconds
-- With ConvoGlide at `120`, the conversation stays probeable through 50 seconds, but steady-state DOM still reaches roughly 11.8k nodes
-- With ConvoGlide at `80`, the conversation stays probeable through 50 seconds and steady-state DOM drops to roughly 9.1k nodes
-- At `80`, the rendered conversation surface was about 45 message nodes in the tested session
-- With ConvoGlide at `20`, the page stays probeable through 50 seconds with roughly 3.3k DOM nodes, and the latest repeated user-facing lane shows much better long-thread stability and scroll smoothness than the raw page
+Current public reading:
+- The current public benchmark is still a 2-run pilot, not the final 5-run report
+- The latest pilot now shows a small first-visible edge for the default `keep 8` profile: `14.35 s` versus raw ChatGPT at `14.54 s`
+- The clearer repeatable win is still post-load behavior: on the current pilot thread, ConvoGlide completes the standardized long-scroll evaluation smoothly while the raw page often does not finish the evaluation cleanly
+- The engineering-side passive soak checks are still useful for maintainers, but they are not the main public KPI

@@ -25,7 +25,7 @@ Recommended for most non-technical users.
    - <https://raw.githubusercontent.com/qimw/convoglide/main/userscript/convoglide.user.js>
 3. Let your userscript manager install the script.
 4. Open a long ChatGPT conversation.
-5. Look for the `ConvoGlide` badge in the top-right corner.
+5. Reload the page once after install.
 
 ### Manual install from this repository
 
@@ -35,7 +35,7 @@ Recommended for most non-technical users.
 
 ### Tuning
 
-The default active-branch limit is `20` message nodes.
+The default active-branch limit is `8` message nodes.
 
 That default is intentionally biased toward faster first-open behavior on very long threads.
 
@@ -72,7 +72,7 @@ Recommended if you want a more extension-like install flow.
 3. Choose **Load unpacked**.
 4. Select the [`extension/`](../extension) directory.
 5. Open a long ChatGPT conversation.
-6. Look for the `ConvoGlide` badge in the top-right corner.
+6. Reload the page once after install.
 
 ### Current extension scope
 
@@ -115,7 +115,7 @@ node scripts/probe-userscript-injection.mjs https://chatgpt.com/
 ### Probe first-load behavior on a long thread
 
 ```bash
-node scripts/probe-userscript-first-load.mjs "<chat-url>" 20
+node scripts/probe-userscript-first-load.mjs "<chat-url>" 8
 ```
 
 ### Run the local benchmark lane
@@ -124,11 +124,11 @@ This is the easiest repeatable way to generate a fresh benchmark report for a re
 
 Before using it, log into ChatGPT once in the dedicated Chrome profile created by `./scripts/launch-test-chrome.sh`.
 
-For the fastest user-facing default check, use `20`.
+For the fastest user-facing default check, use `8`.
 For the heavier post-load virtualization stress profile used in the public Iteration 2 and 3 tables, use `80`.
 
 ```bash
-npm run benchmark:lane -- "<chat-url>" --keep 20
+npm run benchmark:lane -- "<chat-url>" --keep 8
 npm run benchmark:lane -- "<chat-url>" --keep 80
 ```
 
@@ -148,7 +148,7 @@ This is the easiest way to answer the human question of:
 - whether long scrolling still feels smooth
 
 ```bash
-npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 20
+npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 8
 ```
 
 ### Compare two benchmark reports
@@ -173,7 +173,24 @@ Outputs:
 
 ## How to confirm it is working
 
-- A `ConvoGlide` badge appears near the top-right corner
-- The badge phase changes away from `boot`
 - `window.ConvoGlide` exists in the page console
-- For very long threads, the badge should report `fetch-trim` and later `virtualizer`
+- For very long threads, `document.documentElement.dataset.convoglidePhase` moves to values such as `fetch-trim`
+- The conversation opens with fewer recent turns visible than the fully unoptimized page
+
+## Optional debug badge
+
+The on-page badge is now opt-in, so it does not compete with the default first-load path.
+
+Enable it from the page console:
+
+```js
+localStorage.setItem("convoglide:show-badge", "1")
+location.reload()
+```
+
+Disable it again:
+
+```js
+localStorage.removeItem("convoglide:show-badge")
+location.reload()
+```

@@ -24,7 +24,7 @@ ConvoGlide targets two different bottlenecks:
 
 - **Slow first load**
   - very long ChatGPT conversations can ship a huge conversation payload before the page becomes interactive
-  - the current alpha already trims that payload, but repeatable wall-clock first-visible wins are still under active tuning
+  - the current alpha already trims that payload and now shows a small pilot first-visible win on the benchmark thread
 - **Slow after load**
   - after the thread opens, scrolling, typing, and interaction can degrade as too much history stays rendered
 
@@ -34,24 +34,52 @@ ConvoGlide targets two different bottlenecks:
 
 Measurements below come from a real very long ChatGPT conversation used as the current benchmark thread.
 
-Plain-language check on that same thread:
+Current public headline numbers are still a **2-run pilot benchmark**. Final public claims will be refreshed with `n=5` after the current optimization work finishes.
 
-- In the latest repeated user-facing lane (`2` plain runs vs `2` optimized runs), raw ChatGPT reached a stable `50 s` sample in `0/2` runs
-- The same lane reached a stable `50 s` sample in `2/2` runs with ConvoGlide `keep 20`
-- Raw ChatGPT also failed the synthetic long-scroll probe in `2/2` runs, while ConvoGlide reported `smooth` scrolling in `2/2` runs
-- Wall-clock title timing still moves around too much to claim a repeatable first-visible speed win yet, so the current public alpha should be understood as a stability and smoothness win first
+The user-facing pilot currently answers two questions:
+
+- when does the target thread first become visible
+- does a standardized **4-screen long-scroll test** stay smooth once the thread is open
+
+Current pilot reading on the benchmark thread:
+
+- raw ChatGPT median first-visible time: `14.54 s`
+- ConvoGlide default `keep 8` median first-visible time: `14.35 s`
+- raw ChatGPT did **not** complete the long-scroll evaluation cleanly in `2/2` pilot runs
+- ConvoGlide reported `smooth` in `2/2` pilot runs
+- the clearer repeatable public win is still post-load smoothness, but the current pilot now also shows a small first-visible edge
 
 ![ConvoGlide user-facing lane snapshot](docs/assets/user-facing-lane.svg)
 
-| Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| 0 | Baseline | ~5.0 MB | ~1820 | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |
-| 1A | Payload trim, keep `120` | ~0.38 MB | 121 | ~11.8k | ~112 MB | Page stays probeable through 50s |
-| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | ~9.1k | ~99 MB | Recommended stress profile for post-load benchmarking |
-| 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
-| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | ~3.5k | ~100 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
+| Variant | Strategy | First-visible time, median (`n=2`) | Standardized 4-screen long-scroll test | Current reading |
+| --- | --- | ---: | --- | --- |
+| Raw ChatGPT | none | `14.54 s` | not evaluable in `2/2` pilot runs | The title can appear quickly, but the page still fails to stay cooperative for a clean long-scroll evaluation |
+| ConvoGlide | default `keep 8` | `14.35 s` | `smooth` in `2/2` pilot runs | The current pilot is slightly faster on first-visible time and much more reliable once the thread is open |
+
+The public long-scroll label is based on a **4-screen reference distance**. For documentation, that means `3928 px`, derived from the default 14-inch MacBook Pro reference height (`982 px`). The current pilot automation still caps the travel distance by the actual available scroll range of the page.
+
+### Engineering Iteration Snapshot
+
+| Iteration | Strategy | Payload | Steady DOM | Heap | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| 0 | Baseline | ~5.0 MB | Hard to probe | n/a | Real thread becomes difficult to inspect once fully loaded |
+| 1A | Payload trim, keep `120` | ~0.38 MB | ~11.8k | ~112 MB | Trim-only path |
+| 1B | Payload trim, keep `80` | ~0.30 MB | ~9.1k | ~99 MB | Stress profile for post-load benchmarking |
+| 1C | Payload trim, keep `8` | ~0.07 MB | n/a | n/a | Current fast-default profile; payload reduction reaches ~98.6% |
+| 2 | Trim `80` + post-load virtualization MVP | ~0.30 MB | ~3.8k | ~99 MB | Virtualized `33/45` rendered turns; DOM drops ~58% vs 1B |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | ~3.5k | ~100 MB | Deferred `13` heavy blocks; DOM drops ~9% vs 2 |
 
 More detail: [docs/benchmarks.md](docs/benchmarks.md)
+
+## Optimization Targets
+
+These are the current working targets for the next public benchmark refresh:
+
+- final public benchmark uses **5 runs**
+- first-visible time should stay **at or below the raw baseline median**, and keep the current pilot result at **`<= 15 s`** when the public run moves to `n=5`
+- the standardized **4-screen long-scroll test** should report **`smooth` in `5/5` runs**
+- steady DOM on the default profile should move toward **`<= 3.0k`**
+- steady heap on the default profile should move toward **`<= 90 MB`**
 
 ## TODO / Roadmap
 
@@ -83,7 +111,7 @@ Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 
 ConvoGlide intercepts oversized ChatGPT conversation payloads before the app hydrates and trims the active branch down to the most recent message nodes. This keeps the first render from paying the full cost of an extremely large conversation tree.
 
-The current public default is `keep 20`, because that profile has been the best fit so far for getting long threads on-screen faster for normal users. Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
+The current public default is `keep 8`, because that profile is the first one that has pushed the benchmark thread below `15 s` in the current pilot while still keeping post-load long-scroll behavior smooth. Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
 
 ### Optimization 2: Fix slow after load
 
@@ -155,7 +183,8 @@ Full FAQ: [docs/faq.md](docs/faq.md)
 - `2026-03-29`: Added tagged GitHub release asset publishing for the userscript and extension zip
 - `2026-03-29`: Added restore interactions for virtualized turns and heavy blocks, plus docs and CI checks for release packaging
 - `2026-03-29`: Tuned post-load runtime scanning and hardened the benchmark lane so empty captures retry instead of being saved as false-success reports
-- `2026-03-30`: Switched the public default keep limit to `20` to bias the alpha toward the smallest payload and the most stable first-open behavior on very long threads
+- `2026-03-30`: Switched the public default keep limit to `8`, delayed post-load fallback work to `30 s`, and made the on-page debug badge opt-in so the default first-load path stays lighter
+- `2026-03-30`: Reached a `14.35 s` median first-visible time on the benchmark thread in the current `n=2` pilot while preserving `smooth` long-scroll results in `2/2` runs
 - `2026-03-30`: Verified the first real tagged alpha release (`v0.1.0-alpha.1`) and confirmed both release assets download correctly
 
 ## License

@@ -6,43 +6,69 @@ This document tracks the current known benchmark results for ConvoGlide.
 
 Current measurements come from a real very long ChatGPT conversation used during development.
 
-Important observed facts from that thread:
+This document intentionally separates:
+
+- **user-facing metrics** that can be explained in plain language
+- **engineering diagnostics** that are still useful for runtime work but should not dominate the public headline
+
+Reader-facing facts about the current benchmark thread:
 
 - Original conversation response size: about `5.0 MB`
-- Mapping nodes: about `1820`
-- Main branch nodes: about `1749`
-- `conversation/init` response: about `654 bytes`
-- `conversation/<id>/textdocs`: effectively empty at `[]`
+- Current active branch is extremely long, which is why one thread can already behave like a stress test on its own
 
-## Iteration table
+Low-level request details such as `conversation/init`, `textdocs`, and raw mapping counts are still tracked for engineering analysis, but they are no longer used as the public headline table.
+
+## User-facing pilot benchmark
+
+The current public benchmark is still a **2-run pilot**. It is useful for direction-setting, but it is not yet the final public claim. After the current optimization work finishes, the public benchmark will be refreshed with **5 runs**.
+
+Current user-facing questions:
+
+1. When does the target thread first become visible?
+2. Once it is open, does a standardized **4-screen long-scroll test** stay smooth?
+
+For documentation, the public long-scroll label uses a **4-screen reference distance** of `3928 px`, based on the default 14-inch MacBook Pro reference height (`982 px × 4`). During the current pilot phase, the automation still caps travel distance by the actual available scroll range of the page.
+
+| Variant | Strategy | First-visible time, median (`n=2`) | Standardized 4-screen long-scroll test | Current reading |
+| --- | --- | ---: | --- | --- |
+| Raw ChatGPT | none | `14.54 s` | not evaluable in `2/2` pilot runs | The title can appear quickly, but the page often stops cooperating before a clean long-scroll evaluation finishes |
+| ConvoGlide | default `keep 8` | `14.35 s` | `smooth` in `2/2` pilot runs | The current pilot is slightly faster on first-visible time and much more reliable once the thread is open |
+
+Current public interpretation:
+
+- **Do** call the current first-visible result a promising pilot signal, not a final speed claim
+- **Do** claim a repeatable post-load smoothness win on the current pilot thread
+
+## Engineering iteration table
 
 The table below keeps using `80` for Iteration 2 and 3 because that heavier profile still exercises post-load virtualization more clearly than the new fast default.
 
-| Iteration | Strategy | Payload | Mapping nodes | Virtualized turns | Steady DOM | Heap | Probeability | Notes |
+| Iteration | Strategy | Payload | Mapping nodes | Virtualized turns | Steady DOM | Heap | Passive soak check | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| 0 | Baseline | ~5.0 MB | ~1820 | 0 | hard to keep stable | n/a | degrades | Real long thread becomes heavy once the conversation view fully arrives |
-| 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | stable through 50s | Trim-only path |
-| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | stable through 50s | Current stress profile for post-load benchmarking |
-| 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | stable through 50s | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
-| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~100 MB | stable through 50s | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
+| 0 | Baseline | ~5.0 MB | ~1820 | 0 | hard to keep stable | n/a | degrades before clean comparison is easy | Real long thread becomes heavy once the conversation view fully arrives |
+| 1A | Payload trim, keep `120` | ~0.38 MB | 121 | 0 | ~11.8k | ~112 MB | usable in the current passive soak check | Trim-only path |
+| 1B | Payload trim, keep `80` | ~0.30 MB | 81 | 0 | ~9.1k | ~99 MB | usable in the current passive soak check | Current stress profile for post-load benchmarking |
+| 1C | Payload trim, keep `8` | ~0.07 MB | 9 | 0 | n/a | n/a | usable in the current passive soak check | Current fast-default profile; payload reduction reaches about 98.6% |
+| 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | usable in the current passive soak check | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
+| 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~100 MB | usable in the current passive soak check | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
 
-## User-facing load check
+## Internal passive soak check
 
-On the same benchmark thread:
+The project still keeps one internal diagnostic that is **not** part of the public headline table:
 
-- latest repeated user-facing lane (`2` iterations, `keep 20`) produced `0/2` stable-through-50s runs for plain ChatGPT
-- the same lane produced `2/2` stable-through-50s runs for ConvoGlide
-- plain ChatGPT returned `unknown` scroll verdicts in `2/2` runs because the page stopped cooperating before the synthetic long-scroll probe could finish
-- ConvoGlide returned `smooth` scroll verdicts in `2/2` runs at `keep 20`
+- a passive `50 s` soak check with no manual interaction
+
+This is useful for maintainers because some very long threads continue to get heavier for a while after the title first appears. It is **not** the best way to explain the project to end users, so it stays here instead of the README headline table.
+
+On the current benchmark thread:
+
+- latest repeated user-facing lane (`2` iterations, `keep 8`) produced `0/2` successful passive-soak runs for plain ChatGPT
+- the same lane produced `2/2` successful passive-soak runs for ConvoGlide
+- raw ChatGPT also failed the long-scroll evaluation in `2/2` pilot runs
+- ConvoGlide returned `smooth` in `2/2` pilot runs at `keep 8`
 - separate clean reruns at `keep 80` also returned `smooth`
 
-In plain language:
-
-- wall-clock first-visible time still moves around with network timing and rerun variance
-- the repeatable public win right now is stability and scroll smoothness, not a locked-in end-to-end load-time reduction claim
-- the optimized page also completed a 2,700 px synthetic long-scroll pass at about `16.4-16.6 ms` average frame time with zero frames over `33 ms`
-
-## Latest Iteration 2 sample timeline
+## Latest engineering timeline
 
 These checkpoints come from a recent local `npm run benchmark:lane -- "<chat-url>" --keep 80` run against the current benchmark thread.
 
@@ -53,7 +79,7 @@ These checkpoints come from a recent local `npm run benchmark:lane -- "<chat-url
 | `12000ms` | `生活 - 酒精反应就医` | `fetch-trim` | 1165 | `0` | ~105 MB | Payload rewrite completes before turn-level optimizations take over |
 | `18000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~118 MB | Heavy block deferral and turn virtualization are both active |
 | `35000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~97 MB | Heap stabilizes after initial restore pressure |
-| `50000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~97 MB | Current steady-state public alpha snapshot |
+| `50000ms` | `生活 - 酒精反应就医` | `lazy-heavy` | 3471 | `33/45` | ~97 MB | Current steady-state engineering snapshot |
 
 ## Interpretation
 
@@ -133,5 +159,11 @@ The comparison tool now also includes:
 - scroll verdict
 - scroll distance
 - scroll average frame time
+
+For public writing, use these definitions:
+
+- **First-visible time**: the first sample where the page title resolves to the target thread title
+- **Standardized 4-screen long-scroll test**: the public label for the programmatic long-scroll probe, documented against the `3928 px` 14-inch MacBook Pro reference distance and capped by the page's actual available scroll range
+- **Passive soak check**: an internal maintainers-only diagnostic that observes whether the thread keeps cooperating at `50 s` without manual interaction
 
 All headline results shown in the README should be derived from this document.

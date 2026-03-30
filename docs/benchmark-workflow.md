@@ -33,7 +33,7 @@ Use the current benchmark thread and keep limit.
 For the normal user-facing default check:
 
 ```bash
-npm run benchmark:lane -- "<chat-url>" --keep 20
+npm run benchmark:lane -- "<chat-url>" --keep 8
 ```
 
 For the heavier stress profile used to exercise post-load virtualization more clearly:
@@ -62,7 +62,7 @@ Each saved JSON report also includes:
 Those fields are the easiest way to explain results in plain language, for example:
 
 - when the target conversation title first appeared
-- when the optimized page reached a stable state
+- when the optimized page reached an engineering steady state
 - whether a synthetic long scroll stayed smooth or became janky
 
 ## Run the user-facing lane
@@ -70,7 +70,7 @@ Those fields are the easiest way to explain results in plain language, for examp
 Use this when you want a repeated plain-vs-optimized check instead of a single run:
 
 ```bash
-npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 20
+npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 8
 ```
 
 Outputs:
@@ -87,8 +87,15 @@ The user-facing lane summarizes median:
 - first title time
 - main response time
 - render gap
-- stable-through-50s counts
+- passive-soak counts at `50 s`
 - scroll verdict counts
+
+For public writing, prefer:
+
+- **first-visible time**
+- **standardized 4-screen long-scroll test**
+
+Treat the `50 s` passive-soak counts as an engineering diagnostic, not the main user-facing KPI.
 
 ## Compare two saved runs
 
@@ -111,6 +118,8 @@ That produces a JSON summary and a Markdown table showing:
 - scroll distance
 - scroll average frame time
 
+For the current public docs, describe the long-scroll probe as a **4-screen** test. The public reference distance is `3928 px`, derived from the default 14-inch MacBook Pro reference height (`982 px × 4`). During the current pilot phase, the implementation still caps travel distance by the actual available scroll range of the page.
+
 ## How to use the result
 
 When a runtime change is meant to improve performance:
@@ -124,6 +133,11 @@ When a runtime change is meant to improve performance:
    - `CHANGELOG.md`
 
 Only claim an optimization win after the new run and comparison support it.
+
+Current public reporting rule:
+
+- `n=2` is a **pilot benchmark**
+- `n=5` is the target for the next public benchmark refresh after the current optimization pass is complete
 
 If the lane still fails after retries, treat that as a real benchmark failure and inspect:
 
