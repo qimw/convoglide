@@ -17,3 +17,10 @@ Current public reading:
 - The latest pilot now shows a small first-visible edge for the default `keep 8` profile: `14.35 s` versus raw ChatGPT at `14.54 s`
 - The clearer repeatable win is still post-load behavior: on the current pilot thread, ConvoGlide completes the standardized long-scroll evaluation smoothly while the raw page often does not finish the evaluation cleanly
 - The engineering-side passive soak checks are still useful for maintainers, but they are not the main public KPI
+
+Next engineering lead:
+- Once the main conversation payload is trimmed down, the next large first-load responses are no longer the thread sidebar itself
+- The current local capture shows two much larger non-conversation payloads on this page:
+  - `aip/connectors/list_accessible`: about `1.13 MB`
+  - `estuary/content`: about `0.82 MB`
+- That means the next first-load optimization pass may need to look beyond the conversation tree and into auxiliary app / connector surfaces

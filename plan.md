@@ -68,6 +68,10 @@
 - 已补充用户视角可视化素材，README 里现在可以直接展示 repeated user-facing lane 结果
 - 已完成首个真实 tagged alpha release 验证，`v0.1.0-alpha.1` 的 userscript 和 extension zip 下载都正常
 - 已补充安装路径可视化素材，并完成 README 中“视觉材料”这一项 TODO
+- 已确认主会话之外仍有两个很大的首屏辅助 payload：
+  - `aip/connectors/list_accessible` 约 `1.13 MB`
+  - `estuary/content` 约 `0.82 MB`
+- 这说明下一轮首次可见时间优化，很可能要从辅助 app / connector surfaces 继续抠预算，而不只是继续压 conversation 树
 
 ## 三、总目标
 
