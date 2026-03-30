@@ -22,6 +22,7 @@ ConvoGlide targets two different bottlenecks:
 
 - **Slow first load**
   - very long ChatGPT conversations can ship a huge conversation payload before the page becomes interactive
+  - the current alpha already trims that payload, but repeatable wall-clock first-visible wins are still under active tuning
 - **Slow after load**
   - after the thread opens, scrolling, typing, and interaction can degrade as too much history stays rendered
 
@@ -33,10 +34,10 @@ Measurements below come from a real very long ChatGPT conversation used as the c
 
 Plain-language check on that same thread:
 
-- Raw ChatGPT first showed the real conversation title at about `12,422 ms`, then the page started timing out under probing by about `18,452 ms`
-- In a clean rerun with ConvoGlide `keep 20`, the main conversation response arrived at about `10,746 ms` and the real title appeared at about `14,003 ms`
-- Wall-clock timing still moves around from rerun to rerun, but the optimized page stayed probeable through `50,000 ms` instead of timing out soon after the title appeared
-- In the same clean reruns, plain ChatGPT could not finish the synthetic long-scroll probe before timing out, while ConvoGlide reported `smooth` scrolling at both `keep 20` and `keep 80`
+- In the latest repeated user-facing lane (`2` plain runs vs `2` optimized runs), raw ChatGPT reached a stable `50 s` sample in `0/2` runs
+- The same lane reached a stable `50 s` sample in `2/2` runs with ConvoGlide `keep 20`
+- Raw ChatGPT also failed the synthetic long-scroll probe in `2/2` runs, while ConvoGlide reported `smooth` scrolling in `2/2` runs
+- Wall-clock title timing still moves around too much to claim a repeatable first-visible speed win yet, so the current public alpha should be understood as a stability and smoothness win first
 
 | Iteration | Strategy | Payload | Mapping nodes | Steady DOM | Heap | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | --- |

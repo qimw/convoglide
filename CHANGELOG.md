@@ -31,3 +31,5 @@
 - Switched the public default keep limit from `80` to `20` to bias the alpha toward the smallest payload and better long-thread stability on first open
 - Added synthetic long-scroll verdicts and frame-time summaries to the probe and benchmark comparison tools
 - Added first-title timing, main-response timing, and render-gap summaries to benchmark comparisons
+- Added a repeated user-facing lane for median plain-vs-optimized checks
+- Clarified the public alpha claim: repeatable wins are currently stability and scroll smoothness first, with wall-clock first-visible speed still under tuning

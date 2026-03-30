@@ -137,6 +137,18 @@ Outputs:
 - `artifacts/benchmarks/history/<timestamp>.json`
 - `artifacts/benchmarks/history/<timestamp>.md`
 
+### Run the repeated user-facing lane
+
+This is the easiest way to answer the human question of:
+
+- how long until the title appears
+- whether the page stays stable
+- whether long scrolling still feels smooth
+
+```bash
+npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 20
+```
+
 ### Compare two benchmark reports
 
 ```bash

@@ -17,4 +17,4 @@ Observed runtime behavior on the target conversation:
 - With ConvoGlide at `120`, the conversation stays probeable through 50 seconds, but steady-state DOM still reaches roughly 11.8k nodes
 - With ConvoGlide at `80`, the conversation stays probeable through 50 seconds and steady-state DOM drops to roughly 9.1k nodes
 - At `80`, the rendered conversation surface was about 45 message nodes in the tested session
-- With ConvoGlide at `20`, the page stays probeable through 50 seconds with roughly 3.3k DOM nodes, and the latest clean reruns show much better long-thread stability than the raw page
+- With ConvoGlide at `20`, the page stays probeable through 50 seconds with roughly 3.3k DOM nodes, and the latest repeated user-facing lane shows much better long-thread stability and scroll smoothness than the raw page

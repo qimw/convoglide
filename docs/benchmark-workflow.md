@@ -65,6 +65,31 @@ Those fields are the easiest way to explain results in plain language, for examp
 - when the optimized page reached a stable state
 - whether a synthetic long scroll stayed smooth or became janky
 
+## Run the user-facing lane
+
+Use this when you want a repeated plain-vs-optimized check instead of a single run:
+
+```bash
+npm run benchmark:user-facing -- "<chat-url>" --iterations 2 --keep 20
+```
+
+Outputs:
+
+- `artifacts/user-facing/latest.json`
+- `artifacts/user-facing/latest.md`
+- `artifacts/user-facing/history/<timestamp>.json`
+- `artifacts/user-facing/history/<timestamp>.md`
+- `artifacts/user-facing/raw/<timestamp>-plain-<n>.json`
+- `artifacts/user-facing/raw/<timestamp>-optimized-<n>.json`
+
+The user-facing lane summarizes median:
+
+- first title time
+- main response time
+- render gap
+- stable-through-50s counts
+- scroll verdict counts
+
 ## Compare two saved runs
 
 ```bash

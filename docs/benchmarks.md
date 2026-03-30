@@ -30,17 +30,16 @@ The table below keeps using `80` for Iteration 2 and 3 because that heavier prof
 
 On the same benchmark thread:
 
-- plain ChatGPT first showed the real thread title at about `12,422 ms`
-- that plain page started timing out under probing by about `18,452 ms`
-- in a clean rerun, ConvoGlide with the fast default (`keep 20`) received the main conversation response at about `10,746 ms` and showed the real thread title at about `14,003 ms`
-- that optimized page stayed probeable through `50,000 ms`
-- plain ChatGPT could not complete the synthetic long-scroll probe before timing out
-- ConvoGlide reported `smooth` scrolling in clean reruns at both `keep 20` and `keep 80`
+- latest repeated user-facing lane (`2` iterations, `keep 20`) produced `0/2` stable-through-50s runs for plain ChatGPT
+- the same lane produced `2/2` stable-through-50s runs for ConvoGlide
+- plain ChatGPT returned `unknown` scroll verdicts in `2/2` runs because the page stopped cooperating before the synthetic long-scroll probe could finish
+- ConvoGlide returned `smooth` scroll verdicts in `2/2` runs at `keep 20`
+- separate clean reruns at `keep 80` also returned `smooth`
 
 In plain language:
 
-- wall-clock first-visible time still moves around with network timing
-- the optimized page stayed usable instead of quickly becoming a heavy, unstable page
+- wall-clock first-visible time still moves around with network timing and rerun variance
+- the repeatable public win right now is stability and scroll smoothness, not a locked-in end-to-end load-time reduction claim
 - the optimized page also completed a 2,700 px synthetic long-scroll pass at about `16.4-16.6 ms` average frame time with zero frames over `33 ms`
 
 ## Latest Iteration 2 sample timeline
