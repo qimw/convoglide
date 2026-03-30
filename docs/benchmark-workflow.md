@@ -110,6 +110,7 @@ That produces a JSON summary and a Markdown table showing:
 - first title time
 - main conversation response time
 - render gap after the main response
+- passive-soak success counts when the input is a repeated user-facing lane report
 - DOM delta
 - heap delta
 - virtualized turn delta

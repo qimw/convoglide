@@ -48,6 +48,35 @@ function createReport(
   };
 }
 
+function createUserFacingReport(titleMs, responseMs, renderGapMs, stableCount, scrollVerdictCounts, scrollAverageFrameMs = 17.1) {
+  return {
+    url: "https://chatgpt.com/example",
+    keep: 8,
+    summary: {
+      plain: {
+        mode: "plain",
+        runCount: 2,
+        medianTitleMs: titleMs + 500,
+        medianResponseMs: responseMs + 300,
+        medianRenderGapMs: renderGapMs + 200,
+        stableThrough50sCount: 0,
+        scrollVerdictCounts: { unknown: 2 },
+        medianScrollAverageFrameMs: null,
+      },
+      optimized: {
+        mode: "optimized",
+        runCount: 2,
+        medianTitleMs: titleMs,
+        medianResponseMs: responseMs,
+        medianRenderGapMs: renderGapMs,
+        stableThrough50sCount: stableCount,
+        scrollVerdictCounts,
+        medianScrollAverageFrameMs: scrollAverageFrameMs,
+      },
+    },
+  };
+}
+
 test("compare-benchmark-reports computes stable deltas", () => {
   const tempDir = mkdtempSync(join(tmpdir(), "convoglide-compare-"));
   try {
@@ -150,6 +179,42 @@ test("compare-benchmark-reports accepts raw probe report shapes", () => {
     assert.equal(payload.delta.renderGapMs, 645);
     assert.equal(payload.head.scrollVerdict, "smooth");
     assert.match(payload.markdown, /First title ms \| 15873 \| 14003 \| -1870/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("compare-benchmark-reports accepts user-facing lane summaries", () => {
+  const tempDir = mkdtempSync(join(tmpdir(), "convoglide-compare-user-facing-"));
+  try {
+    const basePath = join(tempDir, "base-user-facing.json");
+    const headPath = join(tempDir, "head-user-facing.json");
+
+    writeFileSync(
+      basePath,
+      JSON.stringify(createUserFacingReport(17626.5, 14177, 3449.5, 2, { smooth: 2 }, 16.5), null, 2),
+    );
+    writeFileSync(
+      headPath,
+      JSON.stringify(createUserFacingReport(14352, 12541.5, 1810.5, 2, { smooth: 2 }, 17.1), null, 2),
+    );
+
+    const result = spawnSync(process.execPath, ["scripts/compare-benchmark-reports.mjs", basePath, headPath], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+    });
+
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+
+    const payload = JSON.parse(result.stdout);
+    assert.equal(payload.base.titleElapsedMs, 17626.5);
+    assert.equal(payload.head.titleElapsedMs, 14352);
+    assert.equal(payload.delta.titleElapsedMs, -3274.5);
+    assert.equal(payload.base.passiveSoakCount, 2);
+    assert.equal(payload.head.passiveSoakCount, 2);
+    assert.equal(payload.head.scrollVerdict, "smooth 2/2");
+    assert.match(payload.markdown, /Passive soak success \| 2\/2 \| 2\/2 \| 0/);
+    assert.match(payload.markdown, /First title ms \| 17626.5 \| 14352 \| -3274.5/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

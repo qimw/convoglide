@@ -31,7 +31,50 @@ function formatSignedDelta(value, suffix = "") {
   return `${sign}${value}${suffix}`;
 }
 
+function formatCountFraction(value, total) {
+  if (!Number.isFinite(value) || !Number.isFinite(total) || total <= 0) {
+    return "n/a";
+  }
+  return `${value}/${total}`;
+}
+
+function formatVerdictCounts(counts, total) {
+  if (!counts || typeof counts !== "object") {
+    return "unknown";
+  }
+  const entries = Object.entries(counts);
+  if (!entries.length) {
+    return "unknown";
+  }
+  return entries
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .map(([verdict, count]) => `${verdict} ${count}/${total}`)
+    .join(", ");
+}
+
 function summarizeReport(report) {
+  if (report?.summary?.optimized && report?.summary?.plain) {
+    const optimized = report.summary.optimized;
+    return {
+      domNodes: null,
+      heapMB: null,
+      virtualizedTurns: null,
+      heavyPlaceholders: null,
+      titleElapsedMs: numberOrNull(optimized?.medianTitleMs),
+      mainResponseElapsedMs: numberOrNull(optimized?.medianResponseMs),
+      renderGapMs: numberOrNull(optimized?.medianRenderGapMs),
+      scrollAverageFrameMs: numberOrNull(optimized?.medianScrollAverageFrameMs),
+      scrollDistancePx: null,
+      scrollVerdict: formatVerdictCounts(optimized?.scrollVerdictCounts, optimized?.runCount),
+      passiveSoakCount: numberOrNull(optimized?.stableThrough50sCount),
+      runCount: numberOrNull(optimized?.runCount),
+      phase: "user-facing",
+      label: `optimized n=${optimized?.runCount ?? "n/a"}`,
+      url: report?.url || "n/a",
+      keep: report?.keep ?? "n/a",
+    };
+  }
+
   const stable = report?.summary?.stableSample || report?.stableSample || {};
   const firstResolvedTitleSample = report?.summary?.firstResolvedTitleSample || report?.firstResolvedTitleSample || null;
   const mainConversationEvent = pickMainConversationEvent(report);
@@ -51,6 +94,8 @@ function summarizeReport(report) {
     scrollAverageFrameMs: numberOrNull(scrollMetrics?.averageFrameMs),
     scrollDistancePx: numberOrNull(scrollMetrics?.distance),
     scrollVerdict,
+    passiveSoakCount: null,
+    runCount: null,
     phase: stable.phase || "n/a",
     label: stable.label || "n/a",
     url: report?.url || report?.navigateUrl || "n/a",
@@ -78,6 +123,7 @@ const delta = {
   renderGapMs: numberOrNull((head.renderGapMs ?? NaN) - (base.renderGapMs ?? NaN)),
   scrollAverageFrameMs: numberOrNull((head.scrollAverageFrameMs ?? NaN) - (base.scrollAverageFrameMs ?? NaN)),
   scrollDistancePx: numberOrNull((head.scrollDistancePx ?? NaN) - (base.scrollDistancePx ?? NaN)),
+  passiveSoakCount: numberOrNull((head.passiveSoakCount ?? NaN) - (base.passiveSoakCount ?? NaN)),
 };
 
 const comparison = {
@@ -101,6 +147,7 @@ comparison.markdown = [
   `| First title ms | ${base.titleElapsedMs ?? "n/a"} | ${head.titleElapsedMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.titleElapsedMs)} |`,
   `| Main response ms | ${base.mainResponseElapsedMs ?? "n/a"} | ${head.mainResponseElapsedMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.mainResponseElapsedMs)} |`,
   `| Render gap ms | ${base.renderGapMs ?? "n/a"} | ${head.renderGapMs ?? "n/a"} | ${formatSignedDelta(comparison.delta.renderGapMs)} |`,
+  `| Passive soak success | ${formatCountFraction(base.passiveSoakCount, base.runCount)} | ${formatCountFraction(head.passiveSoakCount, head.runCount)} | ${formatSignedDelta(comparison.delta.passiveSoakCount)} |`,
   `| DOM nodes | ${base.domNodes ?? "n/a"} | ${head.domNodes ?? "n/a"} | ${formatSignedDelta(comparison.delta.domNodes)} |`,
   `| Heap MB | ${base.heapMB ?? "n/a"} | ${head.heapMB ?? "n/a"} | ${formatSignedDelta(comparison.delta.heapMB)} |`,
   `| Virtualized turns | ${base.virtualizedTurns ?? "n/a"} | ${head.virtualizedTurns ?? "n/a"} | ${formatSignedDelta(comparison.delta.virtualizedTurns)} |`,
