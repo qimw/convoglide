@@ -135,8 +135,16 @@ test("compare-benchmark-reports accepts raw probe report shapes", () => {
         firstLoad: {
           networkEvents: [
             {
+              elapsedMs: 2400,
+              url: "https://chatgpt.com/backend-api/conversation/init",
+            },
+            {
               elapsedMs: 13261,
               url: "https://chatgpt.com/backend-api/conversation/699b2b0c-5dc4-8333-a6dd-e88ac7753511",
+            },
+            {
+              elapsedMs: 15001,
+              url: "https://chatgpt.com/backend-api/conversation/699b2b0c-5dc4-8333-a6dd-e88ac7753511/stream_status",
             },
           ],
         },
@@ -154,8 +162,16 @@ test("compare-benchmark-reports accepts raw probe report shapes", () => {
         firstLoad: {
           networkEvents: [
             {
+              elapsedMs: 1800,
+              url: "https://chatgpt.com/backend-api/conversation/init",
+            },
+            {
               elapsedMs: 10746,
               url: "https://chatgpt.com/backend-api/conversation/699b2b0c-5dc4-8333-a6dd-e88ac7753511",
+            },
+            {
+              elapsedMs: 11111,
+              url: "https://chatgpt.com/backend-api/conversation/699b2b0c-5dc4-8333-a6dd-e88ac7753511/textdocs",
             },
           ],
         },

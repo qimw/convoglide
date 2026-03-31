@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { pickMainConversationEventFromEvents } from "./benchmark-utils.mjs";
 
 function readReport(pathLike) {
   return JSON.parse(readFileSync(resolve(pathLike), "utf8"));
@@ -15,12 +16,7 @@ function pickMainConversationEvent(report) {
     : Array.isArray(report?.networkEvents)
       ? report.networkEvents
       : [];
-  return (
-    events.find((event) => {
-      const url = String(event?.url || "");
-      return /\/backend-api\/conversation\/[0-9a-f-]+(?:\?|$)/i.test(url);
-    }) || null
-  );
+  return pickMainConversationEventFromEvents(events);
 }
 
 function formatSignedDelta(value, suffix = "") {

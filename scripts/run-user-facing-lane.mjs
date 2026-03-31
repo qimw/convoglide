@@ -3,10 +3,10 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { waitForDebuggerTargets } from "./cdp.js";
+import { pickMainConversationEventFromEvents } from "./benchmark-utils.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..");
-const CONVERSATION_RESPONSE_RE = /\/backend-api\/conversation\/[0-9a-f-]+(?:\?|$)/i;
 const DEFAULT_KEEP = 8;
 const MIN_KEEP = 4;
 
@@ -179,13 +179,7 @@ async function runMode(url, keep, plain, shouldLaunch, options = {}) {
 }
 
 function pickMainConversationEvent(report) {
-  const events = Array.isArray(report?.networkEvents) ? report.networkEvents : [];
-  return (
-    events.find((event) => {
-      const url = String(event?.url || "");
-      return CONVERSATION_RESPONSE_RE.test(url);
-    }) || null
-  );
+  return pickMainConversationEventFromEvents(report?.networkEvents);
 }
 
 function summarizeReport(report, mode) {
