@@ -12,6 +12,14 @@ Most important numbers from the target conversation:
 - Keeping the latest 8 message nodes cuts the payload by about 98.6 percent
 - Keeping the latest 4 message nodes cuts the payload by about 98.8 percent
 
+
+Human-readable thread profile:
+- Q+A rounds: about 368
+- Average message length: about 448 characters
+- Average user message length: about 113 characters
+- Average assistant message length: about 891 characters
+- Role mix on the active branch: 572 user, 805 assistant, 294 system, 86 tool
+
 Current public reading:
 - The current public benchmark is still a 2-run pilot, not the final 5-run report
 - The latest pilot now shows a small first-visible edge for the default `keep 8` profile: `14.35 s` versus raw ChatGPT at `14.54 s`

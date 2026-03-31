@@ -29,6 +29,22 @@ Reader-facing facts about the current benchmark thread:
 
 Low-level request details such as `conversation/init`, `textdocs`, and raw mapping counts are still tracked for engineering analysis, but they are no longer used as the public headline table.
 
+## Benchmark thread profile
+
+The current benchmark thread is not just "one long chat" in the abstract. It already behaves like a stress test by itself.
+
+| Item | Value | Plain-language reading |
+| --- | ---: | --- |
+| Main active-branch message nodes | `1757` | The visible branch itself is extremely long |
+| Q+A rounds | `368` | One user message followed by one assistant reply counts as one round |
+| Average message length | `448` chars | The thread is not only long, it is also content-heavy |
+| Average user message length | `113` chars | User prompts are usually short |
+| Average assistant message length | `891` chars | Assistant replies are often long and explanation-heavy |
+| Original conversation response size | `~5.06 MB` | Opening the thread still starts with a very large response body |
+| Role mix | `572 user`, `805 assistant`, `294 system`, `86 tool` | The active branch is not a clean user/assistant-only list; internal nodes are interleaved |
+
+This is why ConvoGlide now treats **user-visible messages** as the primary bootstrap unit instead of counting every raw internal node equally.
+
 ## User-facing pilot benchmark
 
 The current public benchmark is still a **2-run pilot**. It is useful for direction-setting, but it is not yet the final public claim. After the current optimization work finishes, the public benchmark will be refreshed with **5 runs**.
