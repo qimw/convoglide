@@ -23,6 +23,7 @@
     "benchmark:lane": "node scripts/run-benchmark-lane.mjs",
     "benchmark:user-facing": "node scripts/run-user-facing-lane.mjs",
     "cache:convoglide": "node scripts/manage-convoglide-cache.mjs",
+    "config:runtime": "node scripts/set-runtime-config.mjs",
     "check:docs": "node scripts/validate-docs.mjs",
     "estimate:trim": "node scripts/estimate-trim-impact.mjs",
     "package:alpha": "node scripts/package-extension.mjs",
