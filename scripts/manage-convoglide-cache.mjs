@@ -1,4 +1,4 @@
-import { createCdpClient, getFirstPageTarget } from "./cdp.js";
+import { createCdpClient, getFirstPageTarget, waitForDebuggerTargets } from "./cdp.js";
 
 function parseArgs(argv) {
   const args = {
@@ -77,6 +77,7 @@ function makeExpression(args) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+await waitForDebuggerTargets({ timeoutMs: 20000, intervalMs: 500 });
 const target = await getFirstPageTarget();
 if (!target?.webSocketDebuggerUrl) {
   console.log(JSON.stringify({ ok: false, reason: "no_target" }, null, 2));

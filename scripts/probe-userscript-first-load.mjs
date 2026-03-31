@@ -1,4 +1,4 @@
-import { createCdpClient, getFirstPageTarget } from "./cdp.js";
+import { createCdpClient, getFirstPageTarget, waitForDebuggerTargets } from "./cdp.js";
 import { buildInjectedUserScript } from "./userscript-source.js";
 
 function parseArgs(argv) {
@@ -182,6 +182,7 @@ const navigateUrl = args.navigateUrl;
 const maxMessageNodes = args.maxMessageNodes;
 const sampleTimesMs = [1000, 2000, 4000, 8000, 12000, 18000, 25000, 35000, 50000];
 
+await waitForDebuggerTargets({ timeoutMs: 20000, intervalMs: 500 });
 const target = await getFirstPageTarget();
 if (!target?.webSocketDebuggerUrl) {
   console.log(JSON.stringify({ ok: false, reason: "no_target" }, null, 2));

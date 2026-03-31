@@ -1,8 +1,9 @@
-import { createCdpClient, getFirstPageTarget } from "./cdp.js";
+import { createCdpClient, getFirstPageTarget, waitForDebuggerTargets } from "./cdp.js";
 import { buildInjectedUserScript } from "./userscript-source.js";
 
 const navigateUrl = process.argv[2] || "https://chatgpt.com/";
 const maxMessageNodes = process.argv[3] ? Number(process.argv[3]) : Number.NaN;
+await waitForDebuggerTargets({ timeoutMs: 20000, intervalMs: 500 });
 const target = await getFirstPageTarget();
 if (!target?.webSocketDebuggerUrl) {
   console.log(JSON.stringify({ ok: false, reason: "no_target" }, null, 2));

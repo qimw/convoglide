@@ -8,6 +8,29 @@ export async function getFirstPageTarget(debugUrl = "http://127.0.0.1:9223/json/
   return targets.find((target) => target.type === "page") || null;
 }
 
+export async function waitForDebuggerTargets({
+  debugUrl = "http://127.0.0.1:9223/json/list",
+  timeoutMs = 20000,
+  intervalMs = 500,
+} = {}) {
+  const deadline = Date.now() + timeoutMs;
+  let lastError = null;
+
+  while (Date.now() < deadline) {
+    try {
+      const targets = await getTargets(debugUrl);
+      if (Array.isArray(targets) && targets.length) {
+        return targets;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  throw lastError || new Error(`Debugger targets not ready within ${timeoutMs}ms`);
+}
+
 export function createCdpClient(webSocketDebuggerUrl) {
   if (!webSocketDebuggerUrl) {
     throw new Error("Missing websocket debugger url");

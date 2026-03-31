@@ -476,11 +476,11 @@ function installConvoGlideChatGPTRuntime(options = {}) {
               : "GET";
 
         const isConversationGet = CONVERSATION_RESPONSE_RE.test(url) && String(method).toUpperCase() === "GET";
+        const conversationId = isConversationGet ? convoglideExtractConversationIdFromUrl(url) : null;
+        const maxMessageNodes = isConversationGet ? getMaxMessageNodes() : null;
+        const cached = isConversationGet ? readConversationCacheEntry(conversationId, maxMessageNodes) : null;
 
         if (isConversationGet) {
-          const conversationId = convoglideExtractConversationIdFromUrl(url);
-          const maxMessageNodes = getMaxMessageNodes();
-          const cached = readConversationCacheEntry(conversationId, maxMessageNodes);
           if (cached?.text) {
             notify({
               phase: "cache-hit",

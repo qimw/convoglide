@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
-import { getTargets } from "./cdp.js";
+import { waitForDebuggerTargets } from "./cdp.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..");
@@ -63,20 +63,6 @@ function parseArgs(argv) {
   return args;
 }
 
-async function waitForDebugger(timeoutMs = 20000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    try {
-      const targets = await getTargets();
-      if (Array.isArray(targets) && targets.length) {
-        return true;
-      }
-    } catch {}
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 500));
-  }
-  return false;
-}
-
 function launchCleanChrome() {
   const child = spawn("./scripts/launch-test-chrome.sh", ["about:blank"], {
     cwd: repoRoot,
@@ -92,9 +78,7 @@ function launchCleanChrome() {
 
 async function prepareBrowser() {
   launchCleanChrome();
-  if (!(await waitForDebugger())) {
-    throw new Error("Chrome remote debugging was not ready in time.");
-  }
+  await waitForDebuggerTargets({ timeoutMs: 20000, intervalMs: 500 });
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 1000));
 }
 
