@@ -17,6 +17,7 @@ function loadRuntimeHelpers() {
     `${source}
 globalThis.__convoglideTestHelpers = {
   convoglideExtractActiveBranchIds,
+  convoglideResolveBootstrapMaxMessageNodes,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -30,6 +31,7 @@ globalThis.__convoglideTestHelpers = {
 
 const {
   convoglideExtractActiveBranchIds,
+  convoglideResolveBootstrapMaxMessageNodes,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -96,6 +98,12 @@ test("convoglideExtractActiveBranchIds rebuilds the active branch order from cur
     "turn-3",
     "turn-4",
   ]);
+});
+
+test("convoglideResolveBootstrapMaxMessageNodes clamps the cold-start bootstrap window", () => {
+  assert.equal(convoglideResolveBootstrapMaxMessageNodes(8), 4);
+  assert.equal(convoglideResolveBootstrapMaxMessageNodes(6, { bootstrapMaxMessageNodes: 5 }), 5);
+  assert.equal(convoglideResolveBootstrapMaxMessageNodes(4), 4);
 });
 
 test("convoglideTrimConversationPayload trims the active branch to the newest message nodes", () => {

@@ -2,6 +2,7 @@ const CONVOGLIDE_ROOT_ID = "convoglide-root";
 const CONVOGLIDE_CONVERSATION_RESPONSE_RE = /\/backend-api\/conversation\/[0-9a-f-]+(?:\?|$)/i;
 const CONVOGLIDE_DEFAULT_MAX_MESSAGE_NODES = 8;
 const CONVOGLIDE_MIN_MAX_MESSAGE_NODES = 4;
+const CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES = 4;
 const CONVOGLIDE_DEFAULT_KEEP_TAIL_TURNS = 12;
 const CONVOGLIDE_DEFAULT_VIEWPORT_BUFFER_PX = 1800;
 const CONVOGLIDE_DEFAULT_MIN_TURN_HEIGHT_PX = 160;
@@ -51,6 +52,14 @@ function convoglideExtractActiveBranchIds(payload) {
 
   branch.reverse();
   return branch;
+}
+
+function convoglideResolveBootstrapMaxMessageNodes(maxMessageNodes, options = {}) {
+  const bootstrapMax = Number.isFinite(options.bootstrapMaxMessageNodes)
+    ? Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(options.bootstrapMaxMessageNodes))
+    : CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES;
+
+  return Math.min(Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(maxMessageNodes)), bootstrapMax);
 }
 
 function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
@@ -218,6 +227,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const CONVERSATION_RESPONSE_RE = CONVOGLIDE_CONVERSATION_RESPONSE_RE;
   const DEFAULT_MAX_MESSAGE_NODES = CONVOGLIDE_DEFAULT_MAX_MESSAGE_NODES;
   const DEFAULT_KEEP_TAIL_TURNS = CONVOGLIDE_DEFAULT_KEEP_TAIL_TURNS;
+  const DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES = CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES;
   const DEFAULT_VIEWPORT_BUFFER_PX = CONVOGLIDE_DEFAULT_VIEWPORT_BUFFER_PX;
   const DEFAULT_MIN_TURN_HEIGHT_PX = CONVOGLIDE_DEFAULT_MIN_TURN_HEIGHT_PX;
   const DEFAULT_HEAVY_BLOCK_BUFFER_PX = CONVOGLIDE_DEFAULT_HEAVY_BLOCK_BUFFER_PX;
@@ -237,6 +247,12 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     fallbackDelayMs: Number.isFinite(options.postLoadActivation?.fallbackDelayMs)
       ? Math.max(2000, Math.floor(options.postLoadActivation.fallbackDelayMs))
       : DEFAULT_POST_LOAD_FALLBACK_DELAY_MS,
+  };
+  const bootstrap = {
+    enabled: options.bootstrap?.enabled !== false,
+    maxMessageNodes: Number.isFinite(options.bootstrap?.maxMessageNodes)
+      ? Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(options.bootstrap.maxMessageNodes))
+      : DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES,
   };
   const conversationCache = {
     enabled: options.conversationCache?.enabled !== false,
@@ -302,6 +318,15 @@ function installConvoGlideChatGPTRuntime(options = {}) {
 
   function trimConversationPayload(payload, maxMessageNodes) {
     return convoglideTrimConversationPayload(payload, maxMessageNodes, { rootId: ROOT_ID });
+  }
+
+  function resolveBootstrapMaxMessageNodes(maxMessageNodes) {
+    if (!bootstrap.enabled) {
+      return maxMessageNodes;
+    }
+    return convoglideResolveBootstrapMaxMessageNodes(maxMessageNodes, {
+      bootstrapMaxMessageNodes: bootstrap.maxMessageNodes,
+    });
   }
 
   function readConversationCacheStore() {
@@ -379,33 +404,55 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     writeConversationCacheStore(trimmedStore);
   }
 
-  function maybeRewriteResponseText(url, text) {
-    if (CONVERSATION_RESPONSE_RE.test(url)) {
-      const maxMessageNodes = getMaxMessageNodes();
-      const payload = JSON.parse(text);
-      const trimmed = trimConversationPayload(payload, maxMessageNodes);
+  function maybeRewriteResponseText(url, text, options = {}) {
+    if (!CONVERSATION_RESPONSE_RE.test(url)) {
+      return null;
+    }
 
-      if (!trimmed.changed) {
-        notify({
-          phase: "fetch-pass",
-          summary: `${trimmed.reason || "pass"} ${trimmed.afterNodes || 0} nodes`,
-          url,
-        });
-        return null;
+    const maxMessageNodes = getMaxMessageNodes();
+    const payload = JSON.parse(text);
+    const fullTrim = trimConversationPayload(payload, maxMessageNodes);
+    const conversationId = convoglideExtractConversationIdFromUrl(url);
+
+    let activeTrim = fullTrim;
+    let mode = "configured";
+
+    if (options.preferBootstrap) {
+      const bootstrapMaxMessageNodes = resolveBootstrapMaxMessageNodes(maxMessageNodes);
+      if (bootstrapMaxMessageNodes < maxMessageNodes) {
+        const bootstrapTrim = trimConversationPayload(payload, bootstrapMaxMessageNodes);
+        if (bootstrapTrim.changed || bootstrapTrim.reason === "within-limit") {
+          activeTrim = bootstrapTrim;
+          mode = `bootstrap:${bootstrapMaxMessageNodes}`;
+        }
       }
+    }
 
+    const cacheText = fullTrim.changed ? JSON.stringify(fullTrim.payload) : text;
+    writeConversationCacheEntry(conversationId, maxMessageNodes, cacheText);
+
+    if (!activeTrim.changed) {
       notify({
-        phase: "fetch-trim",
-        summary: `${trimmed.beforeNodes} -> ${trimmed.afterNodes} nodes (keep ${trimmed.keptMessageNodes} visible)`,
+        phase: mode === "configured" ? "fetch-pass" : "fetch-bootstrap",
+        summary:
+          mode === "configured"
+            ? `${activeTrim.reason || "pass"} ${activeTrim.afterNodes || 0} nodes`
+            : `bootstrap keep ${activeTrim.keptMessageNodes} visible (cache keep ${maxMessageNodes})`,
         url,
       });
-
-      const rewrittenText = JSON.stringify(trimmed.payload);
-      const conversationId = convoglideExtractConversationIdFromUrl(url);
-      writeConversationCacheEntry(conversationId, maxMessageNodes, rewrittenText);
-      return rewrittenText;
+      return mode === "configured" ? null : text;
     }
-    return null;
+
+    notify({
+      phase: mode === "configured" ? "fetch-trim" : "fetch-bootstrap",
+      summary:
+        mode === "configured"
+          ? `${activeTrim.beforeNodes} -> ${activeTrim.afterNodes} nodes (keep ${activeTrim.keptMessageNodes} visible)`
+          : `${activeTrim.beforeNodes} -> ${activeTrim.afterNodes} nodes (bootstrap keep ${activeTrim.keptMessageNodes} visible, cache keep ${maxMessageNodes})`,
+      url,
+    });
+
+    return JSON.stringify(activeTrim.payload);
   }
 
   function installFetchHook() {
@@ -449,7 +496,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
                     return;
                   }
                   const refreshText = await refreshResponse.clone().text();
-                  maybeRewriteResponseText(url, refreshText);
+                  maybeRewriteResponseText(url, refreshText, { preferBootstrap: false });
                 } catch (error) {
                   notify({
                     phase: "cache-refresh-error",
@@ -493,7 +540,9 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         }
 
         const rawText = await response.clone().text();
-        const rewrittenText = maybeRewriteResponseText(url, rawText);
+        const rewrittenText = maybeRewriteResponseText(url, rawText, {
+          preferBootstrap: !cached,
+        });
         if (!rewrittenText) {
           return response;
         }
