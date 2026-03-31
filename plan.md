@@ -50,6 +50,7 @@
 
 ### 刚完成的新进展
 
+- 冷启动 bootstrap 小窗口已接入 runtime：首次无缓存打开可以先返回更小的用户可见窗口，同时把正常 keep 结果写入本地缓存，供下一次重开复用
 - 已补充 runtime 纯逻辑测试
 - 已补充 release checklist 文档
 - 已补充 browser store readiness checklist

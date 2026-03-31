@@ -114,7 +114,11 @@ Expanded roadmap: [docs/roadmap.md](docs/roadmap.md)
 
 ConvoGlide intercepts oversized ChatGPT conversation payloads before the app hydrates and trims the active branch down to the most recent message nodes. This keeps the first render from paying the full cost of an extremely large conversation tree.
 
-The current public default is `keep 8`, because that profile is the first one that has pushed the benchmark thread below `15 s` in the current pilot while still keeping post-load long-scroll behavior smooth. Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
+The current public default is `keep 8`, because that profile is the first one that pushed the benchmark thread below `15 s` in the current pilot while still keeping post-load long-scroll behavior smooth.
+
+The runtime now also includes a colder-start bootstrap path: on an uncached open, it can return a smaller bootstrap window to the current page while filling the normal `keep 8` result into local conversation cache for the next reopen. That makes the first-load path more aligned with the architecture goal of "smallest useful slice first" even though the plugin still cannot force true server-side pagination.
+
+Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
 
 ### Optimization 2: Fix slow after load
 

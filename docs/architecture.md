@@ -99,6 +99,8 @@ The recommended shape is a two-stage bootstrap:
 - **Stage A**: keep a very small bootstrap window for the first visible render
 - **Stage B**: expand to a larger recent-history window after the page is already visible and the main thread is less contested
 
+The current alpha now implements the first half of this idea in a plugin-safe way: on a cold uncached open, it can return a smaller bootstrap window to the current page while filling a larger trimmed result into local cache for the next reopen. The second half, true in-session widening after first visibility, remains harder because the plugin does not own ChatGPT's internal state tree.
+
 This is the most important part of the first-load architecture. The key idea is not "load everything faster". The key idea is "show the smallest useful slice first".
 
 ### 4. Viewport Virtualizer
