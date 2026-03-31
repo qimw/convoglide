@@ -79,6 +79,23 @@ The table below keeps using `80` for Iteration 2 and 3 because that heavier prof
 | 2 | Payload trim `80` + post-load virtualization MVP | ~0.30 MB | 81 | `33/45` | ~3.8k | ~99 MB | usable in the current passive soak check | DOM drops by about 58% versus 1B; heap is still noisy in this alpha design |
 | 3 | Iteration 2 + heavy block lazy activation MVP | ~0.30 MB | 81 | `33/45` | ~3.5k | ~100 MB | usable in the current passive soak check | Deferred `13` heavy blocks; DOM drops by about 9% versus 2 |
 
+## Cold-start bootstrap exploration
+
+A newer exploratory pass tested the first-load bootstrap window directly. These are **single-run exploratory samples**, not public headline benchmark claims. They are useful for tuning because they isolate the first visible slice that the current page receives on an uncached open.
+
+| Variant | Cold-start bootstrap window | First-visible time | Standardized 4-screen long-scroll test | Notes |
+| --- | --- | ---: | --- | --- |
+| ConvoGlide | bootstrap `4`, cache `keep 8` | `27.180 s` | `smooth` | The runtime hit `fetch-bootstrap` and returned `1842 -> 6` nodes to the current page while caching the normal `keep 8` trim for reopen |
+| ConvoGlide | bootstrap `2`, cache `keep 8` | `13.434 s` | `smooth` | The runtime hit `fetch-bootstrap` and returned `1844 -> 3` nodes to the current page while caching the normal `keep 8` trim for reopen |
+| ConvoGlide | warm reopen, cache `keep 8` | `14.351 s` | `smooth` | The runtime reused local conversation cache and reported repeated `cache-hit` events |
+
+Current reading:
+
+- the plugin now has a **real cold-start bootstrap path**, not just a theory on paper
+- smaller bootstrap windows can materially change first-visible behavior
+- `bootstrap = 2` is promising on the current thread, but it still needs repeated runs before it becomes a public default or a headline claim
+- warm reopen behavior still benefits from the larger cached `keep 8` slice
+
 ## Internal passive soak check
 
 The project still keeps one internal diagnostic that is **not** part of the public headline table:

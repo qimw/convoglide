@@ -118,6 +118,8 @@ The current public default is `keep 8`, because that profile is the first one th
 
 The runtime now also includes a colder-start bootstrap path: on an uncached open, it can return a smaller bootstrap window to the current page while filling the normal `keep 8` result into local conversation cache for the next reopen. That makes the first-load path more aligned with the architecture goal of "smallest useful slice first" even though the plugin still cannot force true server-side pagination.
 
+The latest exploratory samples show why this matters: a cold-start `bootstrap = 2` run on the benchmark thread reached `13.434 s` while still keeping long-scroll behavior `smooth`. That result is still exploratory, not a public headline claim, but it confirms that the bootstrap window is now a real tuning lever rather than a theoretical idea.
+
 Higher keep values such as `80` and `120` are still available when you want to keep more recent history visible.
 
 ### Optimization 2: Fix slow after load

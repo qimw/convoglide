@@ -20,6 +20,13 @@ Human-readable thread profile:
 - Average assistant message length: about 891 characters
 - Role mix on the active branch: 572 user, 805 assistant, 294 system, 86 tool
 
+Latest cold-start bootstrap exploration:
+- A real cold-start bootstrap path is now active in the runtime
+- `bootstrap keep 4 visible, cache keep 8` produced a `27.180 s` exploratory first-visible sample
+- `bootstrap keep 2 visible, cache keep 8` produced a `13.434 s` exploratory first-visible sample
+- the corresponding warm-reopen `keep 8` sample produced `14.351 s` with repeated `cache-hit` events
+- both exploratory bootstrap samples still kept the standardized long-scroll verdict at `smooth`
+
 Current public reading:
 - The current public benchmark is still a 2-run pilot, not the final 5-run report
 - The latest pilot now shows a small first-visible edge for the default `keep 8` profile: `14.35 s` versus raw ChatGPT at `14.54 s`
