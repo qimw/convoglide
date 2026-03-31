@@ -76,10 +76,13 @@ More detail: [docs/benchmarks.md](docs/benchmarks.md)
 These are the current working targets for the next public benchmark refresh:
 
 - final public benchmark uses **5 runs**
-- first-visible time should stay **at or below the raw baseline median**, and keep the current pilot result at **`<= 15 s`** when the public run moves to `n=5`
+- cold-start **first-visible time** should hold at **`<= 15 s`**
+- cold-start **first-operable time** should move toward **`<= 16 s`**
+- warm-reopen **first-visible time** should move toward **`<= 6 s`**
 - the standardized **4-screen long-scroll test** should report **`smooth` in `5/5` runs**
 - steady DOM on the default profile should move toward **`<= 3.0k`**
 - steady heap on the default profile should move toward **`<= 90 MB`**
+- render gap should move toward **`<= 1.5 s`**
 
 ## TODO / Roadmap
 
@@ -126,6 +129,8 @@ ConvoGlide now also defers large off-screen `pre` and `table` blocks inside stil
 The latest benchmark shows that heavy block deferral lowers steady DOM again, but heap behavior is still noisier than DOM reduction because the alpha keeps detached snapshots around for fast restore. The next step is tuning those restore paths and broadening media-specific optimizations.
 
 Architecture detail: [docs/architecture.md](docs/architecture.md)
+
+The architecture doc now explicitly separates what a plugin can realistically optimize from what only the upstream product can change. ConvoGlide is designed as a plugin-side progressive rendering layer, not a server-side pagination system.
 
 ## Project Layout
 

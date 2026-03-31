@@ -149,3 +149,16 @@ If the lane still fails after retries, treat that as a real benchmark failure an
 ## Current guardrail
 
 The current public alpha uses one real long ChatGPT thread as the main benchmark thread. That is good enough for iteration work, but it is still a narrow benchmark. Future work can add more benchmark threads after the current alpha runtime stabilizes further.
+
+
+## Metric hierarchy
+
+Use the benchmark outputs in this order:
+
+1. first-visible time
+2. first-operable time
+3. standardized 4-screen long-scroll result
+4. render gap
+5. engineering metrics such as payload, DOM, and heap
+
+This keeps the project aligned with user experience first and implementation details second.

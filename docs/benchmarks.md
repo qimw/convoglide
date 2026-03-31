@@ -1,5 +1,16 @@
 # Benchmarks
 
+## Public KPI definitions
+
+These are the user-facing benchmark definitions that guide the project now:
+
+- **First-visible time**: when the target thread first becomes visible to the user
+- **First-operable time**: when the thread first becomes readable and safely scrollable
+- **Standardized 4-screen long-scroll test**: whether the page stays smooth during a fixed long-scroll evaluation
+- **Render gap**: the browser-side delay between the main conversation response finishing and the thread first becoming visible
+
+The long-scroll reference distance is `3928 px`, derived from the default logical height of a 14-inch MacBook Pro (`982 px × 4`).
+
 This document tracks the current known benchmark results for ConvoGlide.
 
 ## Benchmark thread
