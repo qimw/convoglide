@@ -104,6 +104,7 @@ test("convoglideResolveBootstrapMaxMessageNodes clamps the cold-start bootstrap 
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(8), 4);
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(6, { bootstrapMaxMessageNodes: 5 }), 5);
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(4), 4);
+  assert.equal(convoglideResolveBootstrapMaxMessageNodes(8, { bootstrapMaxMessageNodes: 2 }), 2);
 });
 
 test("convoglideTrimConversationPayload trims the active branch to the newest message nodes", () => {

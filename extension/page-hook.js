@@ -4,6 +4,7 @@ const CONVOGLIDE_CONVERSATION_RESPONSE_RE = /\/backend-api\/conversation\/[0-9a-
 const CONVOGLIDE_DEFAULT_MAX_MESSAGE_NODES = 8;
 const CONVOGLIDE_MIN_MAX_MESSAGE_NODES = 4;
 const CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES = 4;
+const CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES = 2;
 const CONVOGLIDE_DEFAULT_KEEP_TAIL_TURNS = 12;
 const CONVOGLIDE_DEFAULT_VIEWPORT_BUFFER_PX = 1800;
 const CONVOGLIDE_DEFAULT_MIN_TURN_HEIGHT_PX = 160;
@@ -57,10 +58,10 @@ function convoglideExtractActiveBranchIds(payload) {
 
 function convoglideResolveBootstrapMaxMessageNodes(maxMessageNodes, options = {}) {
   const bootstrapMax = Number.isFinite(options.bootstrapMaxMessageNodes)
-    ? Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(options.bootstrapMaxMessageNodes))
+    ? Math.max(CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES, Math.floor(options.bootstrapMaxMessageNodes))
     : CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES;
 
-  return Math.min(Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(maxMessageNodes)), bootstrapMax);
+  return Math.min(Math.max(CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES, Math.floor(maxMessageNodes)), bootstrapMax);
 }
 
 function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
@@ -241,6 +242,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const responseHeaderName = options.responseHeaderName || "x-convoglide";
   const responseHeaderValue = options.responseHeaderValue || "trim";
   const maxMessageNodesStorageKey = options.maxMessageNodesStorageKey || "convoglide:max-message-nodes";
+  const bootstrapMaxMessageNodesStorageKey = options.bootstrapMaxMessageNodesStorageKey || "convoglide:bootstrap-max-message-nodes";
   const postLoadActivation = {
     startDelayMs: Number.isFinite(options.postLoadActivation?.startDelayMs)
       ? Math.max(0, Math.floor(options.postLoadActivation.startDelayMs))
@@ -252,7 +254,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const bootstrap = {
     enabled: options.bootstrap?.enabled !== false,
     maxMessageNodes: Number.isFinite(options.bootstrap?.maxMessageNodes)
-      ? Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(options.bootstrap.maxMessageNodes))
+      ? Math.max(CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES, Math.floor(options.bootstrap.maxMessageNodes))
       : DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES,
   };
   const conversationCache = {
@@ -321,12 +323,21 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     return convoglideTrimConversationPayload(payload, maxMessageNodes, { rootId: ROOT_ID });
   }
 
+  function getBootstrapMaxMessageNodes() {
+    const raw = localStorage.getItem(bootstrapMaxMessageNodesStorageKey);
+    const stored = Number(raw);
+    if (Number.isFinite(stored) && stored >= CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES) {
+      return Math.floor(stored);
+    }
+    return bootstrap.maxMessageNodes;
+  }
+
   function resolveBootstrapMaxMessageNodes(maxMessageNodes) {
     if (!bootstrap.enabled) {
       return maxMessageNodes;
     }
     return convoglideResolveBootstrapMaxMessageNodes(maxMessageNodes, {
-      bootstrapMaxMessageNodes: bootstrap.maxMessageNodes,
+      bootstrapMaxMessageNodes: getBootstrapMaxMessageNodes(),
     });
   }
 
