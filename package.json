@@ -31,6 +31,8 @@
     "probe:first-load": "node scripts/probe-userscript-first-load.mjs",
     "probe:injection": "node scripts/probe-userscript-injection.mjs",
     "test": "node --test tests/*.test.mjs",
-    "verify:package": "node scripts/verify-alpha-package.mjs"
+    "verify:package": "node scripts/verify-alpha-package.mjs",
+    "capture:payload": "node scripts/save-conversation-payload.mjs",
+    "observe:offline": "node scripts/observe-loading-offline.mjs"
   }
 }

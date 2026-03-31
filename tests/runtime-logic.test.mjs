@@ -17,7 +17,9 @@ function loadRuntimeHelpers() {
     `${source}
 globalThis.__convoglideTestHelpers = {
   convoglideExtractActiveBranchIds,
+  convoglideFindTurnWindowStartIndex,
   convoglideResolveBootstrapMaxMessageNodes,
+  convoglideResolveBootstrapTurnWindow,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -31,7 +33,9 @@ globalThis.__convoglideTestHelpers = {
 
 const {
   convoglideExtractActiveBranchIds,
+  convoglideFindTurnWindowStartIndex,
   convoglideResolveBootstrapMaxMessageNodes,
+  convoglideResolveBootstrapTurnWindow,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -105,6 +109,13 @@ test("convoglideResolveBootstrapMaxMessageNodes clamps the cold-start bootstrap 
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(6, { bootstrapMaxMessageNodes: 5 }), 5);
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(4), 4);
   assert.equal(convoglideResolveBootstrapMaxMessageNodes(8, { bootstrapMaxMessageNodes: 2 }), 2);
+});
+
+test("convoglideResolveBootstrapTurnWindow clamps turn-window bootstrap to a safe range", () => {
+  assert.equal(convoglideResolveBootstrapTurnWindow(8), 3);
+  assert.equal(convoglideResolveBootstrapTurnWindow(8, { bootstrapTurnWindow: 4 }), 4);
+  assert.equal(convoglideResolveBootstrapTurnWindow(4), 2);
+  assert.equal(convoglideResolveBootstrapTurnWindow(4, { bootstrapTurnWindow: 9 }), 2);
 });
 
 test("convoglideTrimConversationPayload trims the active branch to the newest message nodes", () => {
@@ -192,6 +203,73 @@ test("convoglideTrimConversationPayload counts user-facing messages instead of r
     "user-2",
     "system-2",
     "assistant-2",
+  ]);
+});
+
+test("convoglideFindTurnWindowStartIndex anchors bootstrap windows on recent user turns", () => {
+  const payload = {
+    current_node: "assistant-3",
+    mapping: {
+      "convoglide-root": {
+        id: "convoglide-root",
+        parent: null,
+        children: ["user-1"],
+        message: null,
+      },
+      "user-1": createRoleNode("user-1", "user", "convoglide-root", ["assistant-1"]),
+      "assistant-1": createRoleNode("assistant-1", "assistant", "user-1", ["user-2"]),
+      "user-2": createRoleNode("user-2", "user", "assistant-1", ["tool-1"]),
+      "tool-1": createRoleNode("tool-1", "tool", "user-2", ["assistant-2"], ""),
+      "assistant-2": createRoleNode("assistant-2", "assistant", "tool-1", ["user-3"]),
+      "user-3": createRoleNode("user-3", "user", "assistant-2", ["system-1"]),
+      "system-1": createRoleNode("system-1", "system", "user-3", ["assistant-3"], ""),
+      "assistant-3": createRoleNode("assistant-3", "assistant", "system-1", []),
+    },
+  };
+
+  const branch = convoglideExtractActiveBranchIds(payload);
+  assert.equal(convoglideFindTurnWindowStartIndex(branch, payload.mapping, 1), 6);
+  assert.equal(convoglideFindTurnWindowStartIndex(branch, payload.mapping, 2), 3);
+  assert.equal(convoglideFindTurnWindowStartIndex(branch, payload.mapping, 3), 1);
+});
+
+test("convoglideTrimConversationPayload can trim by recent turn window", () => {
+  const payload = {
+    current_node: "assistant-3",
+    mapping: {
+      "convoglide-root": {
+        id: "convoglide-root",
+        parent: null,
+        children: ["user-1"],
+        message: null,
+      },
+      "user-1": createRoleNode("user-1", "user", "convoglide-root", ["assistant-1"]),
+      "assistant-1": createRoleNode("assistant-1", "assistant", "user-1", ["user-2"]),
+      "user-2": createRoleNode("user-2", "user", "assistant-1", ["tool-1"]),
+      "tool-1": createRoleNode("tool-1", "tool", "user-2", ["assistant-2"], ""),
+      "assistant-2": createRoleNode("assistant-2", "assistant", "tool-1", ["user-3"]),
+      "user-3": createRoleNode("user-3", "user", "assistant-2", ["system-1"]),
+      "system-1": createRoleNode("system-1", "system", "user-3", ["assistant-3"], ""),
+      "assistant-3": createRoleNode("assistant-3", "assistant", "system-1", []),
+    },
+  };
+
+  const result = convoglideTrimConversationPayload(payload, 4, {
+    mode: "turn-window",
+    turnCount: 2,
+  });
+
+  assert.equal(result.changed, true);
+  assert.equal(result.mode, "turn-window");
+  assert.equal(result.keptMessageNodes, 4);
+  assert.deepEqual(Array.from(Object.keys(result.payload.mapping)), [
+    "convoglide-root",
+    "user-2",
+    "tool-1",
+    "assistant-2",
+    "user-3",
+    "system-1",
+    "assistant-3",
   ]);
 });
 

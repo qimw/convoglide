@@ -4,6 +4,8 @@ const CONVOGLIDE_DEFAULT_MAX_MESSAGE_NODES = 8;
 const CONVOGLIDE_MIN_MAX_MESSAGE_NODES = 4;
 const CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES = 4;
 const CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES = 2;
+const CONVOGLIDE_DEFAULT_BOOTSTRAP_TURN_WINDOW = 3;
+const CONVOGLIDE_MIN_BOOTSTRAP_TURN_WINDOW = 1;
 const CONVOGLIDE_DEFAULT_KEEP_TAIL_TURNS = 12;
 const CONVOGLIDE_DEFAULT_VIEWPORT_BUFFER_PX = 1800;
 const CONVOGLIDE_DEFAULT_MIN_TURN_HEIGHT_PX = 160;
@@ -63,6 +65,39 @@ function convoglideResolveBootstrapMaxMessageNodes(maxMessageNodes, options = {}
   return Math.min(Math.max(CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES, Math.floor(maxMessageNodes)), bootstrapMax);
 }
 
+function convoglideResolveBootstrapTurnWindow(maxMessageNodes, options = {}) {
+  const bootstrapTurnWindow = Number.isFinite(options.bootstrapTurnWindow)
+    ? Math.max(CONVOGLIDE_MIN_BOOTSTRAP_TURN_WINDOW, Math.floor(options.bootstrapTurnWindow))
+    : CONVOGLIDE_DEFAULT_BOOTSTRAP_TURN_WINDOW;
+  const maxVisibleMessages = Math.max(CONVOGLIDE_MIN_MAX_MESSAGE_NODES, Math.floor(maxMessageNodes || 0));
+  const maxTurnWindow = Math.max(
+    CONVOGLIDE_MIN_BOOTSTRAP_TURN_WINDOW,
+    Math.ceil(maxVisibleMessages / 2),
+  );
+  return Math.min(bootstrapTurnWindow, maxTurnWindow);
+}
+
+function convoglideFindTurnWindowStartIndex(branch, mapping, turnCount) {
+  const normalizedTurnCount = Number.isFinite(turnCount) ? Math.max(1, Math.floor(turnCount)) : 0;
+  if (!normalizedTurnCount) {
+    return 0;
+  }
+
+  const userIndexes = [];
+  for (let index = 0; index < branch.length; index += 1) {
+    if (convoglideGetMessageRole(mapping[branch[index]]) === "user") {
+      userIndexes.push(index);
+    }
+  }
+
+  if (!userIndexes.length) {
+    return 0;
+  }
+
+  const targetOffset = Math.max(0, userIndexes.length - normalizedTurnCount);
+  return userIndexes[targetOffset] || 0;
+}
+
 function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
   const rootId = options.rootId || CONVOGLIDE_ROOT_ID;
   if (!payload || typeof payload !== "object" || !payload.mapping || !payload.current_node) {
@@ -76,16 +111,21 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
     return { changed: false, payload, reason: "empty-branch" };
   }
 
-  let messageCount = 0;
+  const trimMode = options.mode === "turn-window" ? "turn-window" : "visible-message";
   let startIndex = 0;
 
-  for (let i = branch.length - 1; i >= 0; i -= 1) {
-    if (convoglideIsUserFacingMessageNode(mapping[branch[i]])) {
-      messageCount += 1;
-    }
-    if (messageCount > maxMessageNodes) {
-      startIndex = i + 1;
-      break;
+  if (trimMode === "turn-window") {
+    startIndex = convoglideFindTurnWindowStartIndex(branch, mapping, options.turnCount);
+  } else {
+    let messageCount = 0;
+    for (let i = branch.length - 1; i >= 0; i -= 1) {
+      if (convoglideIsUserFacingMessageNode(mapping[branch[i]])) {
+        messageCount += 1;
+      }
+      if (messageCount > maxMessageNodes) {
+        startIndex = i + 1;
+        break;
+      }
     }
   }
 
@@ -97,6 +137,7 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
       beforeNodes: Object.keys(mapping).length,
       afterNodes: Object.keys(mapping).length,
       keptMessageNodes: branch.filter((id) => convoglideIsUserFacingMessageNode(mapping[id])).length,
+      mode: trimMode,
     };
   }
 
@@ -142,6 +183,7 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
     beforeNodes: Object.keys(mapping).length,
     afterNodes: Object.keys(newMapping).length,
     keptMessageNodes,
+    mode: trimMode,
   };
 }
 
@@ -229,6 +271,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const DEFAULT_MAX_MESSAGE_NODES = CONVOGLIDE_DEFAULT_MAX_MESSAGE_NODES;
   const DEFAULT_KEEP_TAIL_TURNS = CONVOGLIDE_DEFAULT_KEEP_TAIL_TURNS;
   const DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES = CONVOGLIDE_DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES;
+  const DEFAULT_BOOTSTRAP_TURN_WINDOW = CONVOGLIDE_DEFAULT_BOOTSTRAP_TURN_WINDOW;
   const DEFAULT_VIEWPORT_BUFFER_PX = CONVOGLIDE_DEFAULT_VIEWPORT_BUFFER_PX;
   const DEFAULT_MIN_TURN_HEIGHT_PX = CONVOGLIDE_DEFAULT_MIN_TURN_HEIGHT_PX;
   const DEFAULT_HEAVY_BLOCK_BUFFER_PX = CONVOGLIDE_DEFAULT_HEAVY_BLOCK_BUFFER_PX;
@@ -242,6 +285,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   const responseHeaderValue = options.responseHeaderValue || "trim";
   const maxMessageNodesStorageKey = options.maxMessageNodesStorageKey || "convoglide:max-message-nodes";
   const bootstrapMaxMessageNodesStorageKey = options.bootstrapMaxMessageNodesStorageKey || "convoglide:bootstrap-max-message-nodes";
+  const bootstrapTurnWindowStorageKey = options.bootstrapTurnWindowStorageKey || "convoglide:bootstrap-turn-window";
   const postLoadActivation = {
     startDelayMs: Number.isFinite(options.postLoadActivation?.startDelayMs)
       ? Math.max(0, Math.floor(options.postLoadActivation.startDelayMs))
@@ -255,6 +299,9 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     maxMessageNodes: Number.isFinite(options.bootstrap?.maxMessageNodes)
       ? Math.max(CONVOGLIDE_MIN_BOOTSTRAP_MESSAGE_NODES, Math.floor(options.bootstrap.maxMessageNodes))
       : DEFAULT_BOOTSTRAP_MAX_MESSAGE_NODES,
+    turnWindow: Number.isFinite(options.bootstrap?.turnWindow)
+      ? Math.max(CONVOGLIDE_MIN_BOOTSTRAP_TURN_WINDOW, Math.floor(options.bootstrap.turnWindow))
+      : DEFAULT_BOOTSTRAP_TURN_WINDOW,
   };
   const conversationCache = {
     enabled: options.conversationCache?.enabled !== false,
@@ -322,6 +369,14 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     return convoglideTrimConversationPayload(payload, maxMessageNodes, { rootId: ROOT_ID });
   }
 
+  function trimBootstrapPayload(payload, maxMessageNodes, turnWindow) {
+    return convoglideTrimConversationPayload(payload, maxMessageNodes, {
+      rootId: ROOT_ID,
+      mode: "turn-window",
+      turnCount: turnWindow,
+    });
+  }
+
   function getBootstrapMaxMessageNodes() {
     const raw = localStorage.getItem(bootstrapMaxMessageNodesStorageKey);
     const stored = Number(raw);
@@ -329,6 +384,14 @@ function installConvoGlideChatGPTRuntime(options = {}) {
       return Math.floor(stored);
     }
     return bootstrap.maxMessageNodes;
+  }
+
+  function getBootstrapTurnWindow(maxMessageNodes) {
+    const raw = localStorage.getItem(bootstrapTurnWindowStorageKey);
+    const stored = Number(raw);
+    return convoglideResolveBootstrapTurnWindow(maxMessageNodes, {
+      bootstrapTurnWindow: Number.isFinite(stored) ? stored : bootstrap.turnWindow,
+    });
   }
 
   function resolveBootstrapMaxMessageNodes(maxMessageNodes) {
@@ -429,13 +492,11 @@ function installConvoGlideChatGPTRuntime(options = {}) {
     let mode = "configured";
 
     if (options.preferBootstrap) {
-      const bootstrapMaxMessageNodes = resolveBootstrapMaxMessageNodes(maxMessageNodes);
-      if (bootstrapMaxMessageNodes < maxMessageNodes) {
-        const bootstrapTrim = trimConversationPayload(payload, bootstrapMaxMessageNodes);
-        if (bootstrapTrim.changed || bootstrapTrim.reason === "within-limit") {
-          activeTrim = bootstrapTrim;
-          mode = `bootstrap:${bootstrapMaxMessageNodes}`;
-        }
+      const bootstrapTurnWindow = getBootstrapTurnWindow(maxMessageNodes);
+      const bootstrapTrim = trimBootstrapPayload(payload, maxMessageNodes, bootstrapTurnWindow);
+      if (bootstrapTrim.changed || bootstrapTrim.reason === "within-limit") {
+        activeTrim = bootstrapTrim;
+        mode = `bootstrap:${bootstrapTurnWindow}turns`;
       }
     }
 
@@ -448,7 +509,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         summary:
           mode === "configured"
             ? `${activeTrim.reason || "pass"} ${activeTrim.afterNodes || 0} nodes`
-            : `bootstrap keep ${activeTrim.keptMessageNodes} visible (cache keep ${maxMessageNodes})`,
+            : `bootstrap keep ${activeTrim.keptMessageNodes} visible via ${activeTrim.mode || "turn-window"} (cache keep ${maxMessageNodes})`,
         url,
       });
       return mode === "configured" ? null : text;
@@ -456,10 +517,10 @@ function installConvoGlideChatGPTRuntime(options = {}) {
 
     notify({
       phase: mode === "configured" ? "fetch-trim" : "fetch-bootstrap",
-      summary:
+        summary:
         mode === "configured"
           ? `${activeTrim.beforeNodes} -> ${activeTrim.afterNodes} nodes (keep ${activeTrim.keptMessageNodes} visible)`
-          : `${activeTrim.beforeNodes} -> ${activeTrim.afterNodes} nodes (bootstrap keep ${activeTrim.keptMessageNodes} visible, cache keep ${maxMessageNodes})`,
+          : `${activeTrim.beforeNodes} -> ${activeTrim.afterNodes} nodes (bootstrap keep ${activeTrim.keptMessageNodes} visible via ${activeTrim.mode || "turn-window"}, cache keep ${maxMessageNodes})`,
       url,
     });
 

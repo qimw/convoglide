@@ -5,8 +5,10 @@ function parseArgs(argv) {
     url: "https://chatgpt.com/",
     maxMessageNodes: null,
     bootstrapMaxMessageNodes: null,
+    bootstrapTurnWindow: null,
     clearMaxMessageNodes: false,
     clearBootstrapMaxMessageNodes: false,
+    clearBootstrapTurnWindow: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -27,12 +29,21 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--bootstrap-turn-window") {
+      args.bootstrapTurnWindow = Number(argv[index + 1]);
+      index += 1;
+      continue;
+    }
     if (arg === "--clear-max-message-nodes") {
       args.clearMaxMessageNodes = true;
       continue;
     }
     if (arg === "--clear-bootstrap-max-message-nodes") {
       args.clearBootstrapMaxMessageNodes = true;
+      continue;
+    }
+    if (arg === "--clear-bootstrap-turn-window") {
+      args.clearBootstrapTurnWindow = true;
       continue;
     }
   }
@@ -48,6 +59,9 @@ function buildExpression(args) {
   if (args.clearBootstrapMaxMessageNodes) {
     steps.push("localStorage.removeItem('convoglide:bootstrap-max-message-nodes')");
   }
+  if (args.clearBootstrapTurnWindow) {
+    steps.push("localStorage.removeItem('convoglide:bootstrap-turn-window')");
+  }
   if (Number.isFinite(args.maxMessageNodes)) {
     steps.push(`localStorage.setItem('convoglide:max-message-nodes', '${Math.floor(args.maxMessageNodes)}')`);
   }
@@ -56,10 +70,16 @@ function buildExpression(args) {
       `localStorage.setItem('convoglide:bootstrap-max-message-nodes', '${Math.floor(args.bootstrapMaxMessageNodes)}')`,
     );
   }
+  if (Number.isFinite(args.bootstrapTurnWindow)) {
+    steps.push(
+      `localStorage.setItem('convoglide:bootstrap-turn-window', '${Math.floor(args.bootstrapTurnWindow)}')`,
+    );
+  }
 
   steps.push(`({
     maxMessageNodes: localStorage.getItem('convoglide:max-message-nodes'),
     bootstrapMaxMessageNodes: localStorage.getItem('convoglide:bootstrap-max-message-nodes'),
+    bootstrapTurnWindow: localStorage.getItem('convoglide:bootstrap-turn-window'),
     href: location.href,
   })`);
 
