@@ -15,6 +15,7 @@ function parseArgs(argv) {
     url: "",
     iterations: 2,
     keep: DEFAULT_KEEP,
+    bootstrapTurnWindow: null,
     outDir: resolve(repoRoot, "artifacts/user-facing"),
     launch: true,
     optimizedCacheMode: "preserve",
@@ -37,6 +38,12 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--bootstrap-turn-window") {
+      const value = Number(argv[index + 1]);
+      args.bootstrapTurnWindow = Number.isFinite(value) && value > 0 ? Math.floor(value) : null;
+      index += 1;
+      continue;
+    }
     if (arg === "--out-dir") {
       args.outDir = resolve(repoRoot, argv[index + 1] || "artifacts/user-facing");
       index += 1;
@@ -55,7 +62,7 @@ function parseArgs(argv) {
 
   if (!args.url) {
     console.error(
-      `Usage: node scripts/run-user-facing-lane.mjs <chat-url> [--iterations 2] [--keep ${DEFAULT_KEEP}] [--out-dir artifacts/user-facing] [--no-launch]`,
+      `Usage: node scripts/run-user-facing-lane.mjs <chat-url> [--iterations 2] [--keep ${DEFAULT_KEEP}] [--bootstrap-turn-window 3] [--out-dir artifacts/user-facing] [--no-launch]`,
     );
     process.exit(1);
   }
@@ -130,8 +137,11 @@ function isUsableProbeResult(report) {
   return samples.some((sample) => sample?.ok);
 }
 
-async function runProbe(url, keep, plain) {
+async function runProbe(url, keep, plain, options = {}) {
   const args = [url, String(keep)];
+  if (Number.isFinite(options.bootstrapTurnWindow)) {
+    args.push("--bootstrap-turn-window", String(options.bootstrapTurnWindow));
+  }
   if (plain) {
     args.push("--plain");
   }
@@ -166,7 +176,7 @@ async function runMode(url, keep, plain, shouldLaunch, options = {}) {
       if (!plain && options.optimizedCacheMode === "cold") {
         await clearConversationCache();
       }
-      return await runProbe(url, keep, plain);
+      return await runProbe(url, keep, plain, options);
     } catch (error) {
       lastError = error;
       if (attempt < 3) {

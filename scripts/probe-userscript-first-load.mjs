@@ -7,11 +7,17 @@ function parseArgs(argv) {
       argv[0] ||
       "https://chatgpt.com/g/g-p-68f4c49db7808191aa939c964a7e19f8-sheng-huo/c/699b2b0c-5dc4-8333-a6dd-e88ac7753511",
     maxMessageNodes: argv[1] ? Number(argv[1]) : Number.NaN,
+    bootstrapTurnWindow: Number.NaN,
     plain: false,
   };
 
   for (let index = 2; index < argv.length; index += 1) {
     const arg = argv[index];
+    if (arg === "--bootstrap-turn-window") {
+      args.bootstrapTurnWindow = Number(argv[index + 1]);
+      index += 1;
+      continue;
+    }
     if (arg === "--plain") {
       args.plain = true;
     }
@@ -190,7 +196,9 @@ if (!target?.webSocketDebuggerUrl) {
 }
 
 const { ws, send, close } = createCdpClient(target.webSocketDebuggerUrl);
-const source = buildInjectedUserScript(maxMessageNodes);
+const source = buildInjectedUserScript(maxMessageNodes, {
+  bootstrapTurnWindow: args.bootstrapTurnWindow,
+});
 const samples = [];
 const networkEvents = [];
 const startedAt = Date.now();
@@ -300,6 +308,7 @@ ws.addEventListener("open", async () => {
           mode: args.plain ? "plain" : "optimized",
           navigateUrl,
           maxMessageNodes: Number.isFinite(maxMessageNodes) ? maxMessageNodes : null,
+          bootstrapTurnWindow: Number.isFinite(args.bootstrapTurnWindow) ? args.bootstrapTurnWindow : null,
           samples,
           networkEvents,
           firstResolvedTitleSample,
