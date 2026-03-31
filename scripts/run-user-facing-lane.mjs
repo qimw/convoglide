@@ -195,11 +195,15 @@ function pickMainConversationEvent(report) {
 function summarizeReport(report, mode) {
   const stableSample = report?.stableSample || null;
   const firstResolvedTitleSample = report?.firstResolvedTitleSample || null;
+  const firstVisibleContentSample = report?.firstVisibleContentSample || null;
   const mainConversationEvent = pickMainConversationEvent(report);
   const titleMs = Number.isFinite(firstResolvedTitleSample?.elapsedMs) ? firstResolvedTitleSample.elapsedMs : null;
+  const contentMs = Number.isFinite(firstVisibleContentSample?.elapsedMs)
+    ? firstVisibleContentSample.elapsedMs
+    : null;
   const responseMs = Number.isFinite(mainConversationEvent?.elapsedMs) ? mainConversationEvent.elapsedMs : null;
   const renderGapMs =
-    Number.isFinite(titleMs) && Number.isFinite(responseMs) ? Math.round(titleMs - responseMs) : null;
+    Number.isFinite(contentMs) && Number.isFinite(responseMs) ? Math.round(contentMs - responseMs) : null;
   const scrollAverageFrameMs = Number.isFinite(report?.scrollMetrics?.averageFrameMs)
     ? report.scrollMetrics.averageFrameMs
     : null;
@@ -209,6 +213,7 @@ function summarizeReport(report, mode) {
   return {
     mode,
     titleMs,
+    contentMs,
     responseMs,
     renderGapMs,
     stableThrough50s,
@@ -243,6 +248,7 @@ function summarizeRuns(runs, mode) {
     mode,
     runCount: runs.length,
     medianTitleMs: median(runs.map((run) => run.titleMs)),
+    medianContentMs: median(runs.map((run) => run.contentMs)),
     medianResponseMs: median(runs.map((run) => run.responseMs)),
     medianRenderGapMs: median(runs.map((run) => run.renderGapMs)),
     stableThrough50sCount: runs.filter((run) => run.stableThrough50s).length,
@@ -266,6 +272,7 @@ function renderMarkdown(report) {
     "| Metric | Plain | Optimized |",
     "| --- | ---: | ---: |",
     `| Median first title ms | ${plain.medianTitleMs ?? "n/a"} | ${optimized.medianTitleMs ?? "n/a"} |`,
+    `| Median first content ms | ${plain.medianContentMs ?? "n/a"} | ${optimized.medianContentMs ?? "n/a"} |`,
     `| Median main response ms | ${plain.medianResponseMs ?? "n/a"} | ${optimized.medianResponseMs ?? "n/a"} |`,
     `| Median render gap ms | ${plain.medianRenderGapMs ?? "n/a"} | ${optimized.medianRenderGapMs ?? "n/a"} |`,
     `| Stable through 50s | ${plain.stableThrough50sCount}/${plain.runCount} | ${optimized.stableThrough50sCount}/${optimized.runCount} |`,

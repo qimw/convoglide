@@ -27,20 +27,42 @@ function parseArgs(argv) {
 }
 
 function makeSnapshotExpression() {
-  return `(() => ({
-    title: document.title,
-    readyState: document.readyState,
-    href: location.href,
-    hasBadge: !!document.getElementById('convoglide-badge'),
-    badgeText: document.getElementById('convoglide-badge')?.innerText || null,
-    phase: document.documentElement.dataset.convoglidePhase || null,
-    summary: document.documentElement.dataset.convoglideSummary || null,
-    eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
-    domNodes: document.getElementsByTagName('*').length,
-    virtualizedTurns: document.querySelectorAll('[data-convoglide-virtualized="true"]').length,
-    heavyPlaceholders: document.querySelectorAll('[data-convoglide-heavy-placeholder="true"]').length,
-    heapMB: performance.memory?.usedJSHeapSize ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
-  }))()`;
+  return `(() => {
+    const threadRoot = document.querySelector('#thread') || document.querySelector('main');
+    const turnNodes = threadRoot
+      ? Array.from(threadRoot.querySelectorAll('section[data-testid^="conversation-turn-"], article, [data-message-id]'))
+      : [];
+    const dedupedTurns = [];
+    const seen = new Set();
+    for (const node of turnNodes) {
+      if (!node || seen.has(node)) {
+        continue;
+      }
+      const nestedMessage = node.parentElement?.closest?.('[data-message-id]');
+      if (node.hasAttribute?.('data-message-id') && nestedMessage) {
+        continue;
+      }
+      seen.add(node);
+      dedupedTurns.push(node);
+    }
+    const threadTextChars = threadRoot?.innerText ? threadRoot.innerText.trim().length : 0;
+    return {
+      title: document.title,
+      readyState: document.readyState,
+      href: location.href,
+      hasBadge: !!document.getElementById('convoglide-badge'),
+      badgeText: document.getElementById('convoglide-badge')?.innerText || null,
+      phase: document.documentElement.dataset.convoglidePhase || null,
+      summary: document.documentElement.dataset.convoglideSummary || null,
+      eventCount: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS.length : 0,
+      domNodes: document.getElementsByTagName('*').length,
+      threadTurnCount: dedupedTurns.length,
+      threadTextChars,
+      virtualizedTurns: document.querySelectorAll('[data-convoglide-virtualized="true"]').length,
+      heavyPlaceholders: document.querySelectorAll('[data-convoglide-heavy-placeholder="true"]').length,
+      heapMB: performance.memory?.usedJSHeapSize ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
+    };
+  })()`;
 }
 
 function makeFinalStateExpression() {
@@ -183,6 +205,22 @@ function classifySmoothness(scrollMetrics) {
   return "janky";
 }
 
+function pickFirstResolvedTitleSample(samples) {
+  const okSamples = Array.isArray(samples) ? samples.filter((sample) => sample?.ok) : [];
+  return okSamples.find((sample) => sample.title && sample.title !== "ChatGPT") || null;
+}
+
+function pickFirstVisibleContentSample(samples) {
+  const okSamples = Array.isArray(samples) ? samples.filter((sample) => sample?.ok) : [];
+  return (
+    okSamples.find(
+      (sample) =>
+        Number(sample.threadTurnCount || 0) >= 1 &&
+        Number(sample.threadTextChars || 0) >= 120,
+    ) || null
+  );
+}
+
 const args = parseArgs(process.argv.slice(2));
 const navigateUrl = args.navigateUrl;
 const maxMessageNodes = args.maxMessageNodes;
@@ -300,7 +338,8 @@ ws.addEventListener("open", async () => {
 
     setTimeout(() => {
       const okSamples = samples.filter((sample) => sample.ok);
-      const firstResolvedTitleSample = okSamples.find((sample) => sample.title && sample.title !== "ChatGPT") || null;
+      const firstResolvedTitleSample = pickFirstResolvedTitleSample(samples);
+      const firstVisibleContentSample = pickFirstVisibleContentSample(samples);
       const stableSample = okSamples.at(-1) || null;
       Promise.all([measureScroll(), captureFinalState()]).then(([scrollMetrics, finalState]) => {
         finish({
@@ -312,6 +351,7 @@ ws.addEventListener("open", async () => {
           samples,
           networkEvents,
           firstResolvedTitleSample,
+          firstVisibleContentSample,
           stableSample,
           scrollMetrics,
           scrollVerdict: classifySmoothness(scrollMetrics),
