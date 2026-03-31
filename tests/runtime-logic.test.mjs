@@ -16,6 +16,7 @@ function loadRuntimeHelpers() {
   vm.runInNewContext(
     `${source}
 globalThis.__convoglideTestHelpers = {
+  convoglideExtractActiveBranchIds,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -28,6 +29,7 @@ globalThis.__convoglideTestHelpers = {
 }
 
 const {
+  convoglideExtractActiveBranchIds,
   convoglideTrimConversationPayload,
   convoglideShouldVirtualizeRect,
   convoglideClassifyHeavyBlockMetrics,
@@ -50,6 +52,51 @@ function createMessageNode(id, parent, children = []) {
     },
   };
 }
+
+function createRoleNode(id, role, parent, children = [], text = `part-${id}`) {
+  return {
+    id,
+    parent,
+    children,
+    message: {
+      id: `message-${id}`,
+      author: {
+        role,
+      },
+      content: {
+        content_type: "text",
+        parts: [text],
+      },
+    },
+  };
+}
+
+test("convoglideExtractActiveBranchIds rebuilds the active branch order from current_node", () => {
+  const payload = {
+    current_node: "turn-4",
+    mapping: {
+      "convoglide-root": {
+        id: "convoglide-root",
+        parent: null,
+        children: ["turn-1"],
+        message: null,
+      },
+      "turn-1": createMessageNode("turn-1", "convoglide-root", ["turn-2"]),
+      "turn-2": createMessageNode("turn-2", "turn-1", ["turn-3"]),
+      "turn-3": createMessageNode("turn-3", "turn-2", ["turn-4"]),
+      "turn-4": createMessageNode("turn-4", "turn-3", []),
+      "side-1": createMessageNode("side-1", "turn-2", []),
+    },
+  };
+
+  assert.deepEqual(Array.from(convoglideExtractActiveBranchIds(payload)), [
+    "convoglide-root",
+    "turn-1",
+    "turn-2",
+    "turn-3",
+    "turn-4",
+  ]);
+});
 
 test("convoglideTrimConversationPayload trims the active branch to the newest message nodes", () => {
   const payload = {
@@ -104,6 +151,39 @@ test("convoglideTrimConversationPayload leaves small active branches unchanged",
   assert.equal(result.beforeNodes, 3);
   assert.equal(result.afterNodes, 3);
   assert.equal(result.keptMessageNodes, 2);
+});
+
+test("convoglideTrimConversationPayload counts user-facing messages instead of raw internal nodes", () => {
+  const payload = {
+    current_node: "assistant-2",
+    mapping: {
+      "convoglide-root": {
+        id: "convoglide-root",
+        parent: null,
+        children: ["user-1"],
+        message: null,
+      },
+      "user-1": createRoleNode("user-1", "user", "convoglide-root", ["system-1"]),
+      "system-1": createRoleNode("system-1", "system", "user-1", ["assistant-1"], ""),
+      "assistant-1": createRoleNode("assistant-1", "assistant", "system-1", ["tool-1"]),
+      "tool-1": createRoleNode("tool-1", "tool", "assistant-1", ["user-2"], ""),
+      "user-2": createRoleNode("user-2", "user", "tool-1", ["system-2"]),
+      "system-2": createRoleNode("system-2", "system", "user-2", ["assistant-2"], ""),
+      "assistant-2": createRoleNode("assistant-2", "assistant", "system-2", []),
+    },
+  };
+
+  const result = convoglideTrimConversationPayload(payload, 2);
+
+  assert.equal(result.changed, true);
+  assert.equal(result.keptMessageNodes, 2);
+  assert.deepEqual(Array.from(Object.keys(result.payload.mapping)), [
+    "convoglide-root",
+    "tool-1",
+    "user-2",
+    "system-2",
+    "assistant-2",
+  ]);
 });
 
 test("convoglideShouldVirtualizeRect only virtualizes rectangles outside the viewport buffer", () => {

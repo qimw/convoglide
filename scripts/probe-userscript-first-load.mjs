@@ -37,6 +37,24 @@ function makeSnapshotExpression() {
   }))()`;
 }
 
+function makeFinalStateExpression() {
+  return `(() => {
+    const conversationCache = localStorage.getItem('convoglide:conversation-cache');
+    const auxiliaryCache = localStorage.getItem('convoglide:auxiliary-cache');
+    return {
+      phase: document.documentElement.dataset.convoglidePhase || null,
+      summary: document.documentElement.dataset.convoglideSummary || null,
+      events: Array.isArray(window.__CONVOGLIDE_EVENTS) ? window.__CONVOGLIDE_EVENTS : [],
+      cache: {
+        conversationBytes: conversationCache ? conversationCache.length : 0,
+        auxiliaryBytes: auxiliaryCache ? auxiliaryCache.length : 0,
+        conversationEntryCount: conversationCache ? Object.keys(JSON.parse(conversationCache)).length : 0,
+        auxiliaryEntryCount: auxiliaryCache ? Object.keys(JSON.parse(auxiliaryCache)).length : 0,
+      }
+    };
+  })()`;
+}
+
 function makeScrollExpression() {
   return `(() => new Promise((resolve) => {
     function findScrollRoot() {
@@ -219,6 +237,24 @@ async function measureScroll() {
   }
 }
 
+async function captureFinalState() {
+  try {
+    const runtime = await send(
+      "Runtime.evaluate",
+      {
+        expression: makeFinalStateExpression(),
+        returnByValue: true,
+      },
+      5000,
+    );
+    return runtime.result.value;
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 ws.addEventListener("message", (event) => {
   const msg = JSON.parse(event.data);
   if (msg.method === "Network.responseReceived") {
@@ -257,7 +293,7 @@ ws.addEventListener("open", async () => {
       const okSamples = samples.filter((sample) => sample.ok);
       const firstResolvedTitleSample = okSamples.find((sample) => sample.title && sample.title !== "ChatGPT") || null;
       const stableSample = okSamples.at(-1) || null;
-      measureScroll().then((scrollMetrics) => {
+      Promise.all([measureScroll(), captureFinalState()]).then(([scrollMetrics, finalState]) => {
         finish({
           ok: true,
           mode: args.plain ? "plain" : "optimized",
@@ -269,6 +305,7 @@ ws.addEventListener("open", async () => {
           stableSample,
           scrollMetrics,
           scrollVerdict: classifySmoothness(scrollMetrics),
+          finalState,
         });
       });
     }, Math.max(...sampleTimesMs) + 4000);

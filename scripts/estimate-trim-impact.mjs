@@ -18,6 +18,15 @@ function isMessageNode(node) {
   return !!node?.message;
 }
 
+function getMessageRole(node) {
+  return node?.message?.author?.role || null;
+}
+
+function isUserFacingMessageNode(node) {
+  const role = getMessageRole(node);
+  return role === "user" || role === "assistant";
+}
+
 function trimConversationPayload(payload, maxMessageNodes) {
   if (!payload?.mapping || !payload?.current_node) {
     return { changed: false, payload };
@@ -39,7 +48,7 @@ function trimConversationPayload(payload, maxMessageNodes) {
   let messageCount = 0;
   let startIndex = 0;
   for (let i = branch.length - 1; i >= 0; i -= 1) {
-    if (isMessageNode(mapping[branch[i]])) {
+    if (isUserFacingMessageNode(mapping[branch[i]])) {
       messageCount += 1;
     }
     if (messageCount > maxMessageNodes) {
@@ -54,7 +63,7 @@ function trimConversationPayload(payload, maxMessageNodes) {
       payload,
       beforeNodes: Object.keys(mapping).length,
       afterNodes: Object.keys(mapping).length,
-      keptMessageNodes: branch.filter((id) => isMessageNode(mapping[id])).length,
+      keptMessageNodes: branch.filter((id) => isUserFacingMessageNode(mapping[id])).length,
     };
   }
 
@@ -79,7 +88,7 @@ function trimConversationPayload(payload, maxMessageNodes) {
     const id = keptIds[i];
     const original = mapping[id];
     if (!original) continue;
-    if (isMessageNode(original)) {
+    if (isUserFacingMessageNode(original)) {
       keptMessageNodes += 1;
     }
     newMapping[id] = {

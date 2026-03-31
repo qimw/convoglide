@@ -17,6 +17,7 @@ function parseArgs(argv) {
     keep: DEFAULT_KEEP,
     outDir: resolve(repoRoot, "artifacts/user-facing"),
     launch: true,
+    optimizedCacheMode: "preserve",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -43,6 +44,12 @@ function parseArgs(argv) {
     }
     if (arg === "--no-launch") {
       args.launch = false;
+      continue;
+    }
+    if (arg === "--optimized-cache-mode") {
+      const value = String(argv[index + 1] || "preserve");
+      args.optimizedCacheMode = ["preserve", "cold"].includes(value) ? value : "preserve";
+      index += 1;
     }
   }
 
@@ -89,6 +96,10 @@ async function prepareBrowser() {
     throw new Error("Chrome remote debugging was not ready in time.");
   }
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 1000));
+}
+
+async function clearConversationCache() {
+  return runJsonScriptWithRetry(resolve(repoRoot, "scripts/manage-convoglide-cache.mjs"), ["clear", "--conversation"], 3);
 }
 
 function runJsonScript(scriptPath, args = []) {
@@ -160,13 +171,16 @@ async function runProbe(url, keep, plain) {
   throw new Error(lastReport?.error || `Probe did not collect usable samples (${plain ? "plain" : "optimized"}).`);
 }
 
-async function runMode(url, keep, plain, shouldLaunch) {
+async function runMode(url, keep, plain, shouldLaunch, options = {}) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       if (shouldLaunch) {
         await prepareBrowser();
+      }
+      if (!plain && options.optimizedCacheMode === "cold") {
+        await clearConversationCache();
       }
       return await runProbe(url, keep, plain);
     } catch (error) {
@@ -259,6 +273,7 @@ function renderMarkdown(report) {
     `- URL: \`${report.url}\``,
     `- Iterations: \`${report.iterations}\``,
     `- Keep limit: \`${report.keep}\``,
+    `- Optimized cache mode: \`${report.optimizedCacheMode}\``,
     "",
     "| Metric | Plain | Optimized |",
     "| --- | ---: | ---: |",
@@ -289,7 +304,9 @@ for (let index = 1; index <= args.iterations; index += 1) {
   plainRuns.push(summarizeReport(plainReport, "plain"));
   rawReports.push({ filename: `plain-${index}.json`, report: plainReport });
 
-  const optimizedReport = await runMode(args.url, args.keep, false, args.launch);
+  const optimizedReport = await runMode(args.url, args.keep, false, args.launch, {
+    optimizedCacheMode: args.optimizedCacheMode,
+  });
   optimizedRuns.push(summarizeReport(optimizedReport, "optimized"));
   rawReports.push({ filename: `optimized-${index}.json`, report: optimizedReport });
 }
@@ -299,6 +316,7 @@ const report = {
   url: args.url,
   iterations: args.iterations,
   keep: args.keep,
+  optimizedCacheMode: args.optimizedCacheMode,
   summary: {
     plain: summarizeRuns(plainRuns, "plain"),
     optimized: summarizeRuns(optimizedRuns, "optimized"),

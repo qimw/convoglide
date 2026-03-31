@@ -24,16 +24,25 @@ function convoglideIsMessageNode(node) {
   return !!node?.message;
 }
 
-function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
-  const rootId = options.rootId || CONVOGLIDE_ROOT_ID;
-  if (!payload || typeof payload !== "object" || !payload.mapping || !payload.current_node) {
-    return { changed: false, payload, reason: "missing-shape" };
+function convoglideGetMessageRole(node) {
+  return node?.message?.author?.role || null;
+}
+
+function convoglideIsUserFacingMessageNode(node) {
+  const role = convoglideGetMessageRole(node);
+  return role === "user" || role === "assistant";
+}
+
+function convoglideExtractActiveBranchIds(payload) {
+  const mapping = payload?.mapping;
+  const currentNode = payload?.current_node;
+  if (!mapping || typeof mapping !== "object" || !currentNode) {
+    return [];
   }
 
-  const mapping = payload.mapping;
   const branch = [];
   const seen = new Set();
-  let cursor = payload.current_node;
+  let cursor = currentNode;
 
   while (cursor && mapping[cursor] && !seen.has(cursor)) {
     branch.push(cursor);
@@ -41,17 +50,28 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
     cursor = mapping[cursor].parent;
   }
 
+  branch.reverse();
+  return branch;
+}
+
+function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
+  const rootId = options.rootId || CONVOGLIDE_ROOT_ID;
+  if (!payload || typeof payload !== "object" || !payload.mapping || !payload.current_node) {
+    return { changed: false, payload, reason: "missing-shape" };
+  }
+
+  const mapping = payload.mapping;
+  const branch = convoglideExtractActiveBranchIds(payload);
+
   if (branch.length === 0) {
     return { changed: false, payload, reason: "empty-branch" };
   }
-
-  branch.reverse();
 
   let messageCount = 0;
   let startIndex = 0;
 
   for (let i = branch.length - 1; i >= 0; i -= 1) {
-    if (convoglideIsMessageNode(mapping[branch[i]])) {
+    if (convoglideIsUserFacingMessageNode(mapping[branch[i]])) {
       messageCount += 1;
     }
     if (messageCount > maxMessageNodes) {
@@ -67,7 +87,7 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
       reason: "within-limit",
       beforeNodes: Object.keys(mapping).length,
       afterNodes: Object.keys(mapping).length,
-      keptMessageNodes: branch.filter((id) => convoglideIsMessageNode(mapping[id])).length,
+      keptMessageNodes: branch.filter((id) => convoglideIsUserFacingMessageNode(mapping[id])).length,
     };
   }
 
@@ -94,7 +114,7 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
     const original = mapping[id];
     if (!original) continue;
     const nextId = keptIds[i + 1] || null;
-    if (convoglideIsMessageNode(original)) {
+    if (convoglideIsUserFacingMessageNode(original)) {
       keptMessageNodes += 1;
     }
     newMapping[id] = {
@@ -361,33 +381,32 @@ function installConvoGlideChatGPTRuntime(options = {}) {
   }
 
   function maybeRewriteResponseText(url, text) {
-    if (!CONVERSATION_RESPONSE_RE.test(url)) {
-      return null;
-    }
+    if (CONVERSATION_RESPONSE_RE.test(url)) {
+      const maxMessageNodes = getMaxMessageNodes();
+      const payload = JSON.parse(text);
+      const trimmed = trimConversationPayload(payload, maxMessageNodes);
 
-    const maxMessageNodes = getMaxMessageNodes();
-    const payload = JSON.parse(text);
-    const trimmed = trimConversationPayload(payload, maxMessageNodes);
+      if (!trimmed.changed) {
+        notify({
+          phase: "fetch-pass",
+          summary: `${trimmed.reason || "pass"} ${trimmed.afterNodes || 0} nodes`,
+          url,
+        });
+        return null;
+      }
 
-    if (!trimmed.changed) {
       notify({
-        phase: "fetch-pass",
-        summary: `${trimmed.reason || "pass"} ${trimmed.afterNodes || 0} nodes`,
+        phase: "fetch-trim",
+        summary: `${trimmed.beforeNodes} -> ${trimmed.afterNodes} nodes (keep ${trimmed.keptMessageNodes} visible)`,
         url,
       });
-      return null;
+
+      const rewrittenText = JSON.stringify(trimmed.payload);
+      const conversationId = convoglideExtractConversationIdFromUrl(url);
+      writeConversationCacheEntry(conversationId, maxMessageNodes, rewrittenText);
+      return rewrittenText;
     }
-
-    notify({
-      phase: "fetch-trim",
-      summary: `${trimmed.beforeNodes} -> ${trimmed.afterNodes} nodes (keep ${trimmed.keptMessageNodes})`,
-      url,
-    });
-
-    const rewrittenText = JSON.stringify(trimmed.payload);
-    const conversationId = convoglideExtractConversationIdFromUrl(url);
-    writeConversationCacheEntry(conversationId, maxMessageNodes, rewrittenText);
-    return rewrittenText;
+    return null;
   }
 
   function installFetchHook() {
@@ -410,7 +429,9 @@ function installConvoGlideChatGPTRuntime(options = {}) {
               ? args[1].method
               : "GET";
 
-        if (CONVERSATION_RESPONSE_RE.test(url) && String(method).toUpperCase() === "GET") {
+        const isConversationGet = CONVERSATION_RESPONSE_RE.test(url) && String(method).toUpperCase() === "GET";
+
+        if (isConversationGet) {
           const conversationId = convoglideExtractConversationIdFromUrl(url);
           const maxMessageNodes = getMaxMessageNodes();
           const cached = readConversationCacheEntry(conversationId, maxMessageNodes);
@@ -458,7 +479,7 @@ function installConvoGlideChatGPTRuntime(options = {}) {
         }
 
         const response = await originalFetch(...args);
-        if (!CONVERSATION_RESPONSE_RE.test(url)) {
+        if (!isConversationGet) {
           return response;
         }
 
