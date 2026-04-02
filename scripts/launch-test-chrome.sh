@@ -5,7 +5,7 @@ PROFILE_DIR="${CONVOGLIDE_PROFILE_DIR:-/tmp/chatgpt-perf-test-profile}"
 PORT="${CONVOGLIDE_REMOTE_DEBUG_PORT:-9223}"
 URL="${1:-about:blank}"
 DISABLE_EXTENSIONS="${CONVOGLIDE_DISABLE_EXTENSIONS:-0}"
-CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME_APP="/Applications/Google Chrome.app"
 
 chrome_args=(
   --user-data-dir="$PROFILE_DIR"
@@ -24,7 +24,9 @@ pkill -f "$PROFILE_DIR" >/dev/null 2>&1 || true
 sleep 1
 
 mkdir -p "$PROFILE_DIR"
-nohup "$CHROME_BIN" "${chrome_args[@]}" >/tmp/convoglide-chrome.log 2>&1 &
+# Launch a dedicated Chrome app instance so the flags are not absorbed by an
+# already-running default profile session.
+nohup /usr/bin/open -na "$CHROME_APP" --args "${chrome_args[@]}" >/tmp/convoglide-chrome.log 2>&1 &
 
 for _ in {1..30}; do
   if curl -sf "http://127.0.0.1:${PORT}/json/version" >/dev/null 2>&1; then

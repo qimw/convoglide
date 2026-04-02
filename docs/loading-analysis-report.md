@@ -258,6 +258,8 @@ Implications:
 Cold-start and warm-reopen samples consistently show:
 
 - some setup requests can finish early
+- the main conversation request is still the dominant payload handoff
+- the title can remain unresolved long after the main conversation response arrives
 - the conversation request can still arrive much later
 - even after the conversation request arrives, the title may still stay as `ChatGPT` for a while
 
@@ -267,6 +269,160 @@ This means first-visible time is controlled by two distinct phases:
 2. **post-response frontend acceptance and state establishment**
 
 The second phase is often underestimated.
+
+## Part III: Official Frontend Bundle Findings
+
+To reduce guesswork, we pulled and inspected the largest production bundles that the benchmark thread page actually loads.
+
+The working method was:
+
+1. scan the live page for script inventory
+2. rank scripts by parsed source length
+3. fetch selected bundle bodies from the page context
+4. search for conversation-tree and title-related code paths
+
+This does not provide original source modules or comments, but it is strong enough to identify the relevant runtime responsibilities.
+
+### 1. Bundle inventory
+
+The benchmark page loaded roughly `250+` parsed scripts. The largest ones were:
+
+| Script ID | Approx parsed length | URL suffix |
+| --- | ---: | --- |
+| `13` | `3.36 MB` | `1a7ebd5f-gri5dbq8utrbgkwq.js` |
+| `9` | `1.91 MB` | `4813494d-n5zv9s4atplnbc8o.js` |
+| `70` | `1.68 MB` | `24c0da2c-ljc942fwhhp7fcgk.js` |
+| `8` | `771 KB` | `2340486e-l27h072476k5h6bt.js` |
+| `5` | `734 KB` | `04a8820c-iuorkk0nfo5lovcs.js` |
+
+### 2. Script 9 owns the API-tree to internal-thread conversion
+
+The clearest evidence appears in script `9` (`4813494d-n5zv9s4atplnbc8o.js`).
+
+We found a function of the form:
+
+- `function RCe(e, t) { ... }`
+
+That function:
+
+1. iterates over `e.moderation_results`
+2. iterates over `Object.values(e.mapping)`
+3. converts raw API nodes into internal `zs` tree nodes
+4. returns:
+   - `nodes`
+   - `initialCurrentLeafId: e.current_node`
+
+The important part is not the exact minified symbol name. The important part is the role:
+
+> script 9 is where the server conversation payload gets normalized into the client-side conversation tree and current-leaf state.
+
+That means the official frontend has a distinct "tree normalization + current leaf establishment" phase after the payload arrives.
+
+### 3. Script 9 also shows how thread readiness propagates
+
+Nearby call sites in the same bundle show the next stage:
+
+1. call `RCe(t, conversationId)`
+2. derive a root fallback
+3. build a `zs` tree with `Z2(h.nodes, currentLeafId)`
+4. walk `getBranch()`
+5. reconcile existing tree state
+6. call `setCurrentLeafId(...)`
+7. store the resulting thread back into the thread store
+
+This is a strong confirmation of the architectural model:
+
+- the API payload is not directly rendered
+- it is first normalized into an internal tree
+- then the current branch is established
+- then the thread store is updated
+
+This explains why "payload got smaller" does not automatically mean "first visible became faster". The frontend still has to accept the rewritten payload shape and successfully establish the current leaf.
+
+### 4. Script 13 owns document-title side effects
+
+In script `13` (`1a7ebd5f-gri5dbq8utrbgkwq.js`), we found a component pattern equivalent to:
+
+- inspect children
+- find an element with `type === "title"`
+- extract its string child
+- run an effect that temporarily sets `document.title`
+
+In other words:
+
+> the title is updated through a React `<title>` side-effect wrapper, not as a primitive network event.
+
+This matters because it confirms that title updates happen only after the relevant React subtree is mounted with the right title content.
+
+So title timing is:
+
+- easy to observe
+- useful as an "official-thread-ready-ish" signal
+- but **not** a guaranteed proxy for the first moment the user can see meaningful content
+
+### 5. Why these bundle findings change the optimization strategy
+
+Before bundle inspection, it was possible to believe:
+
+- smaller bootstrap payload -> faster first visible
+
+The bundle findings show why that is incomplete.
+
+The official frontend expects enough shape to:
+
+1. normalize `mapping`
+2. establish `initialCurrentLeafId`
+3. build the internal `zs` tree
+4. set the current leaf
+5. mount the React subtree that eventually updates title
+
+If a bootstrap payload becomes too small or structurally odd, it may reduce bytes while making this state-establishment pipeline less stable.
+
+That is exactly consistent with the earlier empirical result:
+
+- `bootstrap=2` was often worse than `bootstrap=3/4`
+
+### 6. Refined interpretation
+
+At this point, the loading model becomes:
+
+1. **network phase**
+   - fetch main conversation payload
+2. **frontend normalization phase**
+   - convert `mapping/current_node` into an internal conversation tree
+3. **thread-establishment phase**
+   - choose and set current leaf / branch
+4. **React visibility phase**
+   - mount the conversation view and title subtree
+5. **post-load interaction phase**
+   - scrolling, virtualization, heavy-content activation
+
+This is the main reason previous metrics felt inconsistent:
+
+- some of them measured network
+- some measured title
+- some measured post-load smoothness
+- but they did not cleanly isolate the normalization and thread-establishment phase
+
+## Part IV: Revised Bottleneck Model
+
+The primary cold-start bottleneck is no longer best described as "a large payload".
+
+It is more precise to say:
+
+> A large tree-shaped payload arrives, then the official frontend must normalize it into an internal tree, establish the current branch, and only then can the visible thread and title settle.
+
+That leads to the following bottleneck stack:
+
+1. **main conversation payload size**
+2. **frontend tree normalization cost**
+3. **frontend current-leaf / branch establishment cost**
+4. **React subtree mount that eventually resolves the title**
+5. **post-load DOM cost**
+
+ConvoGlide already helps strongly with item `5`, and helps warm-reopen cases by short-circuiting part of items `1-4`.
+
+The remaining cold-start problem is mainly in items `2-4`.
 
 ### 3.1 Request classes observed during first load
 
