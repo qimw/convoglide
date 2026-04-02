@@ -63,12 +63,13 @@ test('trimByRecentTurns preserves structural nodes inside the recent turn window
   const trimmed = trimByRecentTurns(payload, 1);
   assert.deepEqual(Object.keys(trimmed.payload.mapping), [
     'convoglide-root',
+    'tool-1',
     'user-2',
     'system-2',
     'assistant-2',
   ]);
   assert.equal(trimmed.summary.keptTurns, 1);
-  assert.equal(trimmed.summary.retainedStructuralNodes, 1);
+  assert.equal(trimmed.summary.retainedStructuralNodes, 2);
   assert.equal(trimmed.summary.terminalRole, 'assistant');
 });
 

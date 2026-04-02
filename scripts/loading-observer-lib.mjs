@@ -26,6 +26,10 @@ export function isUserFacingRole(role) {
   return role === 'user' || role === 'assistant';
 }
 
+export function isStructuralRole(role) {
+  return role === 'system' || role === 'tool';
+}
+
 export function extractTextLength(message) {
   const parts = message?.content?.parts;
   if (!Array.isArray(parts)) return 0;
@@ -100,6 +104,7 @@ export function trimByVisibleMessages(payload, maxVisibleMessages, rootId = 'con
     }
   }
 
+  startIndex = expandStartIndexForStructuralContext(branchIds, mapping, startIndex);
   const keptIds = branchIds.slice(startIndex);
   return buildTrimmedPayload(payload, keptIds, rootId, { strategy: 'visible-message', maxVisibleMessages });
 }
@@ -123,9 +128,25 @@ export function trimByRecentTurns(payload, turnCount, rootId = 'convoglide-root'
   }
 
   const targetUserOffset = Math.max(0, userIndexes.length - turnCount);
-  const startIndex = userIndexes[targetUserOffset] ?? 0;
+  const startIndex = expandStartIndexForStructuralContext(
+    branchIds,
+    mapping,
+    userIndexes[targetUserOffset] ?? 0,
+  );
   const keptIds = branchIds.slice(startIndex);
   return buildTrimmedPayload(payload, keptIds, rootId, { strategy: 'turn-window', turnCount });
+}
+
+function expandStartIndexForStructuralContext(branchIds, mapping, startIndex) {
+  let nextStartIndex = Math.max(0, Math.floor(startIndex || 0));
+  while (nextStartIndex > 0) {
+    const previousRole = getNodeRole(mapping?.[branchIds[nextStartIndex - 1]]);
+    if (!isStructuralRole(previousRole)) {
+      break;
+    }
+    nextStartIndex -= 1;
+  }
+  return nextStartIndex;
 }
 
 function clone(value) {

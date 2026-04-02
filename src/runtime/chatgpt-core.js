@@ -36,6 +36,11 @@ function convoglideIsUserFacingMessageNode(node) {
   return role === "user" || role === "assistant";
 }
 
+function convoglideIsStructuralMessageNode(node) {
+  const role = convoglideGetMessageRole(node);
+  return role === "system" || role === "tool";
+}
+
 function convoglideExtractActiveBranchIds(payload) {
   const mapping = payload?.mapping;
   const currentNode = payload?.current_node;
@@ -98,6 +103,18 @@ function convoglideFindTurnWindowStartIndex(branch, mapping, turnCount) {
   return userIndexes[targetOffset] || 0;
 }
 
+function convoglideExpandStartIndexForStructuralContext(branch, mapping, startIndex) {
+  let nextStartIndex = Math.max(0, Math.floor(startIndex || 0));
+  while (nextStartIndex > 0) {
+    const previousNode = mapping?.[branch[nextStartIndex - 1]];
+    if (!convoglideIsStructuralMessageNode(previousNode)) {
+      break;
+    }
+    nextStartIndex -= 1;
+  }
+  return nextStartIndex;
+}
+
 function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {}) {
   const rootId = options.rootId || CONVOGLIDE_ROOT_ID;
   if (!payload || typeof payload !== "object" || !payload.mapping || !payload.current_node) {
@@ -128,6 +145,8 @@ function convoglideTrimConversationPayload(payload, maxMessageNodes, options = {
       }
     }
   }
+
+  startIndex = convoglideExpandStartIndexForStructuralContext(branch, mapping, startIndex);
 
   if (startIndex === 0) {
     return {

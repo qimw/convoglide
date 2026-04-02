@@ -233,6 +233,40 @@ test("convoglideFindTurnWindowStartIndex anchors bootstrap windows on recent use
   assert.equal(convoglideFindTurnWindowStartIndex(branch, payload.mapping, 3), 1);
 });
 
+test("convoglideTrimConversationPayload keeps structural nodes immediately before the kept turn window", () => {
+  const payload = {
+    current_node: "assistant-2",
+    mapping: {
+      "convoglide-root": {
+        id: "convoglide-root",
+        parent: null,
+        children: ["user-1"],
+        message: null,
+      },
+      "user-1": createRoleNode("user-1", "user", "convoglide-root", ["assistant-1"]),
+      "assistant-1": createRoleNode("assistant-1", "assistant", "user-1", ["tool-1"]),
+      "tool-1": createRoleNode("tool-1", "tool", "assistant-1", ["system-1"], ""),
+      "system-1": createRoleNode("system-1", "system", "tool-1", ["user-2"], ""),
+      "user-2": createRoleNode("user-2", "user", "system-1", ["assistant-2"]),
+      "assistant-2": createRoleNode("assistant-2", "assistant", "user-2", []),
+    },
+  };
+
+  const result = convoglideTrimConversationPayload(payload, 4, {
+    mode: "turn-window",
+    turnCount: 1,
+  });
+
+  assert.equal(result.changed, true);
+  assert.deepEqual(Array.from(Object.keys(result.payload.mapping)), [
+    "convoglide-root",
+    "tool-1",
+    "system-1",
+    "user-2",
+    "assistant-2",
+  ]);
+});
+
 test("convoglideTrimConversationPayload can trim by recent turn window", () => {
   const payload = {
     current_node: "assistant-3",
